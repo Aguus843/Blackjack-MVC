@@ -88,13 +88,26 @@ public class Mano{
     // Metodo para mostrar la mano
     public void mostrarMano(Jugador jugador){
         System.out.println();
+        int ases = 0;
         int sumatoriaPuntaje = 0;
+        int aux = 0;
         System.out.println(jugador.getNombre() + " tiene las siguientes cartas:");
         for (Carta carta : mano) {
             System.out.printf("%s de %s\n", carta.getValor(), carta.getPalo());
             sumatoriaPuntaje += carta.getValorNumerico();
+            if (carta.getValorNumerico() == 11) ases++;
         }
-        if ((jugador.getManoActual().tieneAs() && sumatoriaPuntaje <= 20) || ((jugador.getManoActual().tieneAs() && jugador.getManoActual().getMano().get(1).getValor().equals("A") && sumatoriaPuntaje == 22))){
+        while (sumatoriaPuntaje > 21 && ases > 0){
+            aux = sumatoriaPuntaje;
+            sumatoriaPuntaje -= 10;
+            ases--;
+            if (ases == 1){
+                aux = sumatoriaPuntaje;
+                sumatoriaPuntaje -= 10;
+                ases--;
+            }
+        }
+        if ((jugador.getManoActual().tieneAs() && sumatoriaPuntaje < 21) && aux < 21){
             System.out.printf("El puntaje actual es de: %d/%d\n", this.puntaje-10, this.puntaje);
         }else System.out.println("El puntaje actual es de: " + this.puntaje);
         System.out.println("===========================================");
@@ -119,7 +132,7 @@ public class Mano{
         setPuntaje(jugador.getManoActual().getMano().getFirst().getValorNumerico());
         System.out.println("[LOG] El puntaje a la mano 1 se ha seteado en: " + jugador.getManoActual().getPuntaje());
         // Ajusto la apuesta (Lo mismo para la mano 2)
-        jugador.mostrarManos();
+        // jugador.mostrarManos();
         jugador.setApuestaMano2(jugador.getApuesta());
         jugador.ajustarSaldo(-jugador.getApuestaMano2());
         System.out.printf("%s: tu apuesta para ambas manos son -> Mano 1 (%d) -> Mano 2 (%d).\n", jugador.getNombre(), jugador.getApuesta(), jugador.getApuestaMano2());

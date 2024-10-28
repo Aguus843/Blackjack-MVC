@@ -34,6 +34,9 @@ public class Blackjack_SaldoYManos {
         if (indiceJugador == jugadores.size()) this.indiceJugador = 0;
         else this.indiceJugador++;
     }
+    public void setIndiceJugador(int indice){
+        this.indiceJugador = indice;
+    }
     public String ControladorCartasRestantes(){
         return String.valueOf(mazo.cartasRestantes());
     }
@@ -48,6 +51,21 @@ public class Blackjack_SaldoYManos {
     }
     public boolean getJugadorTieneAs(){
         return jugadores.get(indiceJugador).getManos().getFirst().tieneAs();
+    }
+    public boolean getJugadorTieneAsMano1(){
+        return jugadores.get(indiceJugador).getManoActual().tieneAs();
+    }
+    public boolean getJugadorTieneAsMano2(){
+        return jugadores.get(indiceJugador).getMano2().tieneAs();
+    }
+    public int getPuntajeMano1(){
+        return jugadores.get(indiceJugador).getManoActual().getPuntaje();
+    }
+    public int getPuntajeMano2(){
+        return jugadores.get(indiceJugador).getMano2().getPuntaje();
+    }
+    public int getPuntajeManoIndices(int index){
+        return jugadores.get(indiceJugador).getManos().get(index).getPuntaje();
     }
     public boolean primerCartaTieneAs(){
         return jugadores.get(indiceJugador).getManoActual().getMano().getFirst().equals("A");
@@ -88,6 +106,9 @@ public class Blackjack_SaldoYManos {
     public int getCantidadJugadores(){
         return this.cantidadJugadores;
     }
+    public void setCantidadJugadores(int cantidad){
+        this.cantidadJugadores = cantidad;
+    }
     public boolean hasCrupierCard(){
         return crupier.tieneCarta();
     }
@@ -114,6 +135,39 @@ public class Blackjack_SaldoYManos {
     }
     public int CantidadCartasMano2(){
         return getJugadorActualTurno().getMano2().getMano().size();
+    }
+    public void jugadorDobloMano(){
+        jugadores.get(indiceJugador).getManoActual().doblarMano(getJugadorActualTurno());
+    }
+    public void jugadorDobloManoIndice(int indice){
+        jugadores.get(indiceJugador).getManos().get(indice).doblarMano(getJugadorActualTurno());
+    }
+    public int getCantidadManosJugador(){
+        return jugadores.get(indiceJugador).getManos().size();
+    }
+    public Carta getCartasMano1(int indice){
+        return jugadores.get(indiceJugador).getManoActual().getMano().get(indice);
+    }
+    public Carta getCartasMano2(int indice){
+        return jugadores.get(indiceJugador).getMano2().getMano().get(indice);
+    }
+    public boolean getSePaso21(){
+        return jugadores.get(indiceJugador).getManoActual().sePaso21();
+    }
+    public boolean getSePaso21Index(int index){
+        return jugadores.get(indiceJugador).getManos().get(index).sePaso21();
+    }
+    public List<Carta> getManoCrupier(){
+        return crupier.getMano();
+    }
+    public int getPuntajeCrupier(){
+        return crupier.getPuntajeCrupier();
+    }
+    public boolean crupierDebePedirCarta(){
+        return crupier.debePedirCarta();
+    }
+    public boolean crupierSePaso21(){
+        return getPuntajeCrupier() > 21;
     }
 
     public boolean realizarApuesta(){
@@ -187,7 +241,6 @@ public class Blackjack_SaldoYManos {
                 } else if (ingreso.equals("s")) {
                     if ((jugador.getSaldo() >= jugador.getApuesta()) && mano.getMano().getFirst().getValor().equals(mano.getMano().get(1).getValor())) {
                         System.out.printf("%s decidió dividir.\n", jugador.getNombre());
-                        // jugador.dividirMano(jugador); Terminar luego
                         jugador.getManoActual().dividirMano(jugador);
                         // Arranco un ciclo while para cargar ambas manos
                         List<Mano> manos = jugador.getManos();
@@ -258,7 +311,7 @@ public class Blackjack_SaldoYManos {
                     break;
                 } else if (ingreso.equals("d")) {
                     System.out.printf("[DEBUG] El saldo del jugador %s es de %d.\n", jugador.getNombre(), jugador.getSaldo());
-                    if (jugador.getSaldo() >= jugador.getApuesta()) {
+                    if (jugador.getSaldo() >= jugador.getApuesta() && !yaPidio) {
                         System.out.printf("%s dobló.\n", jugador.getNombre());
                         // jugador.pedirCartaMano1();
                         mano.recibirCarta(mazo.repartirCarta());
@@ -276,7 +329,7 @@ public class Blackjack_SaldoYManos {
         cambiarTurno();
     }
 
-    public void configurarJugadores(){
+    public void configurarJugadoresa(){
         System.out.print("Ingrese cantidad de jugadores: ");
         this.cantidadJugadores = scanner.nextInt();
         scanner.nextLine(); // Limpio buffer
@@ -295,6 +348,9 @@ public class Blackjack_SaldoYManos {
             scanner.nextLine();
             System.out.println();
         }
+    }
+    public void configurarJugadores(String nickname, int saldo){
+        jugadores.add(new Jugador(nickname, saldo));
     }
 
     public void repartirCartasIniciales(Jugador jugador){
