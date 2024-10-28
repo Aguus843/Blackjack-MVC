@@ -37,10 +37,6 @@ public class controlador {
         return modelo.getJugadorActualTurno();
     }
 
-    public void turnoJugador(Jugador obtenerJugadorActual){
-        modelo.turnoJugador(obtenerJugadorActual);
-    }
-
     public boolean terminoRonda(String ingreso){
         return modelo.getJugadorActualTurno().consultarSeguirJugando(ingreso);
     }
@@ -232,5 +228,9 @@ public class controlador {
 
     public int getPuntajeManosIndices(int indice){
         return modelo.getPuntajeManoIndices(indice);
+    }
+
+    public List<Mano> getManosJugador(){
+        return modelo.getManosJugador();
     }
 }

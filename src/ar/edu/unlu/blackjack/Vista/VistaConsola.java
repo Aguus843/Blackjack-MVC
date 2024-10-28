@@ -21,11 +21,11 @@ public class VistaConsola {
     public void mostrarMensaje(String mensaje){
         System.out.printf("%s", mensaje);
     }
-    public void separadorMensaje11s(String mensaje){
-        System.out.printf("%-11s", mensaje);
+    public void separadorMensaje14s(String mensaje){
+        System.out.printf("%-14s", mensaje);
     }
-    public void separadorMensaje22s(String mensaje){
-        System.out.printf("%-22s", mensaje);
+    public void separadorMensaje19s(String mensaje){
+        System.out.printf("\t%-19s", mensaje);
     }
     public void separadorMensaje15s(String mensaje){
         System.out.printf("%-15s", mensaje);
@@ -99,6 +99,9 @@ public class VistaConsola {
                 // Reparto las cartas a cada jugador
                 while (controlador.getIndiceJugadorActual() != controlador.getCantidadJugadoresTotal()) {
                     controlador.repartirCartasIniciales(controlador.obtenerJugadorActual());
+                    mostrarManoJugadorVista();
+                    mostrarMensaje("Presione Enter para continuar...");
+                    controlador.ingresarPorTeclado();
                     controlador.cambiarTurnoJugador();
                 }
                 if (controlador.getIndiceJugadorActual() == controlador.getCantidadJugadoresTotal()) {
@@ -148,7 +151,9 @@ public class VistaConsola {
         if ((controlador.jugadorActualTieneAs() && sumatoriaPuntaje <= 20) && aux < 21){
             mostrarMensajeConSaltoLinea("El puntaje actual es de: " + (controlador.getPuntajeMano()-10) + "/" + controlador.getPuntajeMano());
         }else mostrarMensajeConSaltoLinea("El puntaje del jugador es de: " + controlador.getPuntajeMano());
+        mostrarMensajeConSaltoLinea("");
     }
+
 
     public void mostrarManosDivididasJugadorVista(){
         int sumatoriaPuntaje1 = 0;
@@ -163,17 +168,17 @@ public class VistaConsola {
         Carta cartaMano2;
 
         int cantidadCartas = Math.max(controlador.getCantidadCartasMano1(), controlador.getCantidadCartasMano2());
-        mostrarMensaje("-= MANO 1=-\t\t\t\t\t\t -= MANO 2 =-\n");
+        mostrarMensaje("-= MANO 1=-\t\t\t\t\t\t\t -= MANO 2 =-\n");
         for (int i = 0; i < cantidadCartas; i++){
             if (i < controlador.getCantidadCartasMano1()){
                 cartasMano1 = controlador.getCartasMano1(i);
                 mostrarMensaje(cartasMano1.getValor() + " de " + cartasMano1.getPalo());
                 sumatoriaPuntaje1 += cartasMano1.getValorNumerico();
                 if (cartasMano1.getValorNumerico() == 11) ases1++;
-            }else separadorMensaje11s("");;
+            }else separadorMensaje15s("");;
             if (i < controlador.getCantidadCartasMano2()){
                 cartaMano2 = controlador.getCartasMano2(i);
-                separadorMensaje22s("");
+                separadorMensaje19s("");
                 mostrarMensaje(cartaMano2.getValor() + " de " + cartaMano2.getPalo() + "\n");
                 sumatoriaPuntaje2 += cartaMano2.getValorNumerico();
                 if (cartaMano2.getValorNumerico() == 11) ases2++;
@@ -264,18 +269,22 @@ public class VistaConsola {
         boolean yaPidio = false;
         boolean yaPregunto = false;
         boolean flagDoblo = false;
+        boolean yaMostroMano = false;
         String ingreso;
         Mano mano = controlador.obtenerManoJugador();
         if (mano != null){
-            mostrarManoJugadorVista();
             if (controlador.getJugadorTieneBlackjack()){
                 mostrarManoJugadorVista();
                 mostrarMensajeConSaltoLinea("Felicitaciones " + controlador.getNombreJugador() + " conseguiste BJ!");
             }
             while ((!controlador.getSePaso21ManoPrincipal() && controlador.getPuntajeMano() != 21) && !flagDoblo){
+                if (!yaMostroMano) mostrarManoJugadorVista();
+                yaMostroMano = true;
                 mostrarMensajeConSaltoLinea("Es el turno del jugador: " + controlador.getNombreJugador());
                 if (controlador.getCrupierTieneAsPrimera() && !yaPregunto){
                     while (!insurance && controlador.getSaldoJugadorActual() >= controlador.getApuestaJugador()/2){
+                        mostrarMensajeConSaltoLinea("ATENCIÓN! Presione enter para continuar...");
+                        controlador.ingresarPorTeclado();
                         int ingresoSeguro = controlador.ingresarSeguroBlackjack();
                         if (ingresoSeguro == 1){
                             mostrarMensajeConSaltoLinea(controlador.getNombreJugador() + " decidió pagar el seguro.");
@@ -314,7 +323,7 @@ public class VistaConsola {
                         mostrarMensajeConSaltoLinea(controlador.getNombreJugador() + " decidió dividir");
                         controlador.dividirManoJugador();
                         // Arranco un ciclo while para cargar ambas manos, creando un array de manos
-                        List<Mano> manos = controlador.obtenerJugadorActual().getManos();
+                        List<Mano> manos = controlador.getManosJugador();
                         boolean termino = false;
                         boolean terminoMano2 = false;
                         boolean imprimioPrimeraVez = false;
