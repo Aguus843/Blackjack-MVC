@@ -4,7 +4,7 @@ import ar.edu.unlu.blackjack.Vista.VistaConsola;
 
 import java.util.List;
 
-public class controlador {
+public class controlador implements Observador{
     public Blackjack_SaldoYManos modelo;
     public VistaConsola vista;
 
@@ -232,5 +232,43 @@ public class controlador {
 
     public List<Mano> getManosJugador(){
         return modelo.getManosJugador();
+    }
+
+    @Override
+    public void update(Observable o, Object arg){
+        if (arg instanceof Evento){
+            switch ((Evento) arg){
+                case BLACKJACK:
+                    this.vista.mostrarMensaje("Felicitaciones, ganaste con un BJ!");
+                    break;
+                case CRUPIER_BLACKJACK:
+                    this.vista.mostrarMensaje("El crupier obtuvo BJ! Perdiste la ronda.");
+                    break;
+                case SALDO_RESTADO:
+                    this.vista.mostrarMensaje("Se te restó saldo de tu cuenta! " + getApuestaJugador());
+                    break;
+                case EMPATO_JUGADOR:
+                    break;
+                case JUGADOR_APOSTO:
+                    break;
+                case SALDO_AGREGADO:
+                    break;
+                case JUGADOR_PAGO_SEGURO:
+                    break;
+                case CRUPIER_BLACKJACK_Y_EMPATE:
+                    break;
+                case PERDIO_JUGADOR:
+                    this.vista.mostrarMensaje("El jugador " + getNombreJugador() + " ha perdido.");
+                    break;
+                case GANADOR_JUGADOR:
+                    break;
+                case MANO_FINALIZADA:
+                    break;
+                case JUGADA_REALIZADA:
+                    break;
+                default:
+                    break;
+            }
+        }
     }
 }

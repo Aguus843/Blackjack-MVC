@@ -1,25 +1,42 @@
 package ar.edu.unlu.blackjack.Modelo;
 
+import ar.edu.unlu.blackjack.Controlador.controlador;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-public class Blackjack_SaldoYManos {
+public class Blackjack_SaldoYManos implements Observable {
     private final Mazo mazo;
     private final List<Jugador> jugadores;
     private final Crupier crupier;
     private final Scanner scanner;
     private int cantidadJugadores;
-    private List<Mano> manos;
     private int indiceJugador;
+    private ArrayList<controlador> misObservadores;
 
     public Blackjack_SaldoYManos() {
         mazo = new Mazo();
         crupier = new Crupier();
-        manos = new ArrayList<Mano>();
+        misObservadores = new ArrayList<>();
         jugadores = new ArrayList<Jugador>();
         this.indiceJugador = 0;
         scanner = new Scanner(System.in);
+
+    }
+    @Override
+    public void addObserver(controlador controlador) {
+        misObservadores.add(controlador);
+    }
+    @Override
+    public void deleteObserver(controlador controlador) {
+        misObservadores.remove(controlador);
+    }
+    @Override
+    public void notificarObservadores(Evento evento){
+        for (int i = 0; i < misObservadores.size(); i++){
+            misObservadores.get(i).update(this, evento);
+        }
     }
     public void crupierPideCarta(){
         crupier.pedirCarta();
@@ -139,6 +156,8 @@ public class Blackjack_SaldoYManos {
     public void jugadorDobloMano(){
         jugadores.get(indiceJugador).getManoActual().doblarMano(getJugadorActualTurno());
     }
+
+    // Metodo para doblar la mano del jugador en caso de haber dividido.
     public void jugadorDobloManoIndice(int indice){
         jugadores.get(indiceJugador).getManos().get(indice).doblarMano(getJugadorActualTurno());
     }
@@ -172,6 +191,16 @@ public class Blackjack_SaldoYManos {
     public List<Mano> getManosJugador(){
         return jugadores.get(indiceJugador).getManos();
     }
+    public void setAjustarSaldo(Jugador jugador, int monto){
+        jugador.ajustarSaldo(monto);
+        if (monto > 0){
+            notificarObservadores(Evento.SALDO_AGREGADO);
+        }else notificarObservadores(Evento.SALDO_RESTADO);
+    }
+    public void setApuesta(Jugador jugador, int monto){
+        jugador.setApuesta(monto);
+        notificarObservadores(Evento.JUGADOR_APOSTO);
+    }
 
     public boolean realizarApuesta(){
         if (this.indiceJugador == jugadores.size()) return true;
@@ -179,9 +208,9 @@ public class Blackjack_SaldoYManos {
         if (monto > getJugadorActualTurno().getSaldo() || monto <= 1){
           return false;
         }
-        getJugadorActualTurno().ajustarSaldo(-monto);
-        getJugadorActualTurno().setApuesta(monto);
-        getJugadorActualTurno().mostrarSaldo();
+        setAjustarSaldo(getJugadorActualTurno(), -monto);
+        setApuesta(getJugadorActualTurno(), monto);
+        // getJugadorActualTurno().mostrarSaldo();
         getJugadorActualTurno().iniciarMano();
         return true;
     }
@@ -189,6 +218,9 @@ public class Blackjack_SaldoYManos {
         return realizarApuesta();
     }
 
+    public boolean jugadorActualSeBajo(){
+        return getJugadorActualTurno().getSeBajo();
+    }
 
     public void configurarJugadores(String nickname, int saldo){
         jugadores.add(new Jugador(nickname, saldo));
@@ -201,36 +233,6 @@ public class Blackjack_SaldoYManos {
                 jugador.repartirCartaAMano(j, mazo.repartirCarta());
             }
         }
-//        mano = jugador.getManoActual() ;
-//        mano.mostrarMano(jugador);
-//        System.out.println("Presiona Enter para continuar...");
-        // scanner.nextLine();
-    }
-
-    // Metodo donde controlo al crupier
-    public void turnoCrupier() {
-        System.out.println("Turno del crupier.");
-        crupier.mostrarMano();
-
-        // Obtiene una carta hasta obtener 17 o más.
-        while (crupier.debePedirCarta()){
-            System.out.println("El crupier está obteniendo una carta...");
-            try {
-                Thread.sleep(1500);
-            }catch (InterruptedException e){
-                e.printStackTrace();
-                System.out.println("Interrumpido");
-            }
-            crupier.pedirCarta();
-            crupier.mostrarMano();
-        }
-
-        // Verifico si se pasó de 21
-        if (crupier.getPuntaje() > 21){
-            System.out.println("El crupier se paso de los 21.");
-        }else{
-            System.out.println("El crupier se planta en " + crupier.getPuntaje());
-        }
     }
 
     public void evaluarGanadores(){
@@ -240,29 +242,38 @@ public class Blackjack_SaldoYManos {
 
     public void evaluarGanadoresBlackjack(){ // Entra si el crupier tiene Blackjack
         System.out.println("El crupier obtuvo blackjack.");
-        for (Jugador jugador : jugadores){
-            List<Mano> manos = jugador.getManos();
-            if (jugador.tieneBlackjack()){
-                System.out.println(jugador.getNombre() + ": el crupier también obtuvo Blackjack por lo que es un empate!");
-                System.out.println(jugador.getNombre() + " EMPATÓ!");
-                devolverApuesta(jugador, jugador.getApuesta());
+        notificarObservadores(Evento.CRUPIER_BLACKJACK);
+        // for (Jugador jugador : jugadores){
+        for (int i = 0; i < jugadores.size(); i++){
+            List<Mano> manos = jugadores.get(i).getManos();
+            if (jugadores.get(i).tieneBlackjack()){
+                // System.out.println(jugador.getNombre() + ": el crupier también obtuvo Blackjack por lo que es un empate!");
+                notificarObservadores(Evento.BLACKJACK);
+                // System.out.println(jugador.getNombre() + " EMPATÓ!");
+                notificarObservadores(Evento.CRUPIER_BLACKJACK_Y_EMPATE);
+                devolverApuesta(jugadores.get(i), jugadores.get(i).getApuesta());
             }else{
-                if (jugador.getPagoSeguro()){
-                    System.out.println(jugador.getNombre() + ": pagó el seguro por lo que se le devuelve el monto apostado.");
-                    devolverApuesta(jugador, jugador.getApuesta()); // Se le devuelve el monto de la apuesta -> sería el seguro * 2
+                if (jugadores.get(i).getPagoSeguro()){
+                    // System.out.println(jugador.getNombre() + ": pagó el seguro por lo que se le devuelve el monto apostado.");
+                    // notificarObservadores(Evento.CRUPIER_BLACKJACK);
+                    devolverApuesta(jugadores.get(i), jugadores.get(i).getApuesta()); // Se le devuelve el monto de la apuesta -> sería el seguro * 2
                 }
-                System.out.println(jugador.getNombre() + " PERDIÓ!");
+                notificarObservadores(Evento.PERDIO_JUGADOR);
+                // System.out.println(jugador.getNombre() + " PERDIÓ!");
             }
         }
     }
 
     public void devolverApuesta(Jugador jugador, int apuesta) {
-        System.out.printf("%s: debido al empate se te devolvió el monto apostado (%d)\n", jugador.getNombre(), apuesta);
+        // System.out.printf("%s: debido al empate se te devolvió el monto apostado (%d)\n", jugador.getNombre(), apuesta);
+        if (crupier.tieneBlackjack()) notificarObservadores(Evento.CRUPIER_BLACKJACK);
+        else notificarObservadores(Evento.EMPATO_JUGADOR);
         jugador.ajustarSaldo(apuesta);
     }
 
     public void adjudicarGanancia(Jugador jugador, int apuesta){
-        System.out.printf("%s: felicitaciones! Ganaste la apuesta.\n", jugador.getNombre());
+        // System.out.printf("%s: felicitaciones! Ganaste la apuesta.\n", jugador.getNombre());
+        notificarObservadores(Evento.GANADOR_JUGADOR);
         jugador.ajustarSaldo(2*apuesta);
     }
 

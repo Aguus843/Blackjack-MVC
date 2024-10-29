@@ -21,9 +21,6 @@ public class VistaConsola {
     public void mostrarMensaje(String mensaje){
         System.out.printf("%s", mensaje);
     }
-    public void separadorMensaje14s(String mensaje){
-        System.out.printf("%-14s", mensaje);
-    }
     public void separadorMensaje19s(String mensaje){
         System.out.printf("\t%-19s", mensaje);
     }
@@ -39,6 +36,8 @@ public class VistaConsola {
         VistaConsola vistaConsola = new VistaConsola();
         vistaConsola.iniciarJuego();
     }
+
+
     public int solicitarCantidadJugadores(){
         mostrarMensaje("Ingrese la cantidad de jugadores (1 - 7): ");
         boolean salir = false;
@@ -46,7 +45,7 @@ public class VistaConsola {
             String input = scanner.nextLine();
             try {
                 int cantidad = Integer.parseInt(input);
-                if (cantidad <= 1 || cantidad >= 7){
+                if (cantidad >= 1 && cantidad <= 7){
                     return cantidad;
                 }else{
                     mostrarMensaje("[!] Debes ingresar una cantidad entre 1 y 7: ");
@@ -70,9 +69,9 @@ public class VistaConsola {
         for (int i = 0; i < cantJugadores; i++) {
             int nroJugador = i+1;
             mostrarMensaje("Ingrese el nombre del jugador " + nroJugador + ": ");
-            String nickname = scanner.nextLine();
+            String nickname = controlador.ingresarPorTeclado();
             mostrarMensaje("Ingrese el saldo del jugador " + nroJugador + ": ");
-            controlador.configurarJugadores(nickname, scanner.nextInt());
+            controlador.configurarJugadores(nickname, Integer.parseInt(controlador.ingresarPorTeclado()));
         }
         // Cargo las apuestas de todos los jugadores
         controlador.setIndiceJugador(0);
@@ -84,13 +83,17 @@ public class VistaConsola {
                     while (!seCargoApuesta){
                         mostrarMensaje(controlador.obtenerJugadorActual().getNombre() + ": ingrese el monto a apostar: ");
                         if (!controlador.cargarApuestaJugador(controlador.obtenerJugadorActual())){
-                            mostrarMensajeConSaltoLinea("[!] El monto debe ser mayor que uno (1) y debe ser mayor al saldo disponible.");
+                            mostrarMensajeConSaltoLinea("[!] El monto debe ser mayor que uno (1) y debe ser menor al saldo disponible.");
                         }
                         seCargoApuesta = true;
                     }
                     if (controlador.getIndiceJugadorActual() != controlador.getCantidadJugadoresTotal()) {
                         controlador.cambiarTurnoJugador();
                         seCargoApuesta = false;
+                    }
+                    // Leo al ultimo jugador en caso de que sea > 1
+                    if (controlador.getIndiceJugadorActual() == controlador.getCantidadJugadoresTotal()-1){
+                        mostrarMensajeConSaltoLinea(controlador.obtenerJugadorActual().getNombre() + " tu saldo actual es de " + controlador.obtenerJugadorActual().getSaldo() + " pesos.");
                     }
                 }
                 if (controlador.getIndiceJugadorActual() == controlador.getCantidadJugadoresTotal()) {
@@ -263,8 +266,8 @@ public class VistaConsola {
     }
 
     public void turnoJugadorActual(){
-        int indiceJugador = controlador.getIndiceJugadorActual();
-        mostrarMensajeConSaltoLinea("[DEBUG] Indice jugador: " + indiceJugador + ", jugador: " + controlador.getNombreJugador());
+        // int indiceJugador = controlador.getIndiceJugadorActual();
+        // mostrarMensajeConSaltoLinea("[DEBUG] Indice jugador: " + indiceJugador + ", jugador: " + controlador.getNombreJugador());
         boolean insurance = false;
         boolean yaPidio = false;
         boolean yaPregunto = false;
@@ -343,8 +346,8 @@ public class VistaConsola {
                                     imprimioPrimeraVez = true;
                                     mostrarMensajeConSaltoLinea("Es el turno de: " + controlador.getNombreJugador() + " con la mano " + (i+1) + " ---> (" + controlador.getPuntajeManosIndices(i) + ")");
                                     mostrarMensaje(controlador.getNombreJugador() + ": ingrese 'c' para pedir, 'd' para doblar o 'p' para plantarse: ");
-                                    ingreso = controlador.ingresarPorTeclado().toLowerCase();
-                                    if (ingreso.equals("c")){
+                                    ingresoDividir = controlador.ingresarPorTeclado().toLowerCase();
+                                    if (ingresoDividir.equals("c")){
                                         controlador.setRepartirCartaAMano(i);
                                         mostrarManosDivididasJugadorVista();
                                         if (controlador.getSePaso21Index(i)){
@@ -354,11 +357,11 @@ public class VistaConsola {
                                         }
                                         yaPidio = true;
                                         break;
-                                    }else if (ingreso.equals("p")){
+                                    }else if (ingresoDividir.equals("p")){
                                         mostrarMensajeConSaltoLinea(controlador.getNombreJugador() + " se plantó con la mano " + (i + 1) + ".");
                                         termino = true;
                                         break;
-                                    }else if (ingreso.equals("d")){
+                                    }else if (ingresoDividir.equals("d")){
                                         if (controlador.getSaldoJugadorActual() >= controlador.getApuestaJugador() && !yaPidio){
                                             mostrarMensajeConSaltoLinea(controlador.getNombreJugador() + " dobló con la mano " + (i + 1) + ".");
                                             controlador.setRepartirCartaAMano(i);

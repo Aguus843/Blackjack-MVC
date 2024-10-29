@@ -116,7 +116,7 @@ public class Mano{
     public void doblarMano(Jugador jugador){
         jugador.ajustarSaldo(-jugador.getApuesta());
         jugador.setApuesta(jugador.getApuesta()*2);
-        mostrarMano(jugador);
+        // mostrarMano(jugador);
         // jugador.mostrarSaldo();
         doblo = true;
     }

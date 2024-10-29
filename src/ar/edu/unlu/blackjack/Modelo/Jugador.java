@@ -16,6 +16,7 @@ public class Jugador {
     private Scanner scanner;
     private Mazo mazo;
     private boolean esTurno;
+    private boolean seBajo;
 
     public Jugador(String nombre, int saldoInicial) {
         this.nombre = nombre;
@@ -28,6 +29,7 @@ public class Jugador {
         this.doblo = false;
         this.pagoSeguro = false;
         this.esTurno = false;
+        this.seBajo = false;
         this.scanner = new Scanner(System.in);
     }
     public Mazo getMazo(){
@@ -48,6 +50,10 @@ public class Jugador {
     public void setTurno(boolean turno){
         this.esTurno = turno;
     }
+    public boolean getSeBajo(){
+        return this.seBajo;
+    }
+
     public boolean consultarSeguirJugando(String seguir){
         return seguir.equals("1");
     }
