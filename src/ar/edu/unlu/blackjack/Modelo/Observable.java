@@ -1,9 +1,9 @@
 package ar.edu.unlu.blackjack.Modelo;
 
-import ar.edu.unlu.blackjack.Controlador.controlador;
+import ar.edu.unlu.blackjack.Controlador.controladorConsolaGrafica;
 
 public interface Observable {
-    void addObserver(controlador controlador);
-    void deleteObserver(controlador controlador);
+    void addObserver(controladorConsolaGrafica controladorConsolaGrafica);
+    void deleteObserver(controladorConsolaGrafica controladorConsolaGrafica);
     void notificarObservadores(Evento evento);
 }

@@ -1,18 +1,17 @@
 package ar.edu.unlu.blackjack.Vista;
 
-import ar.edu.unlu.blackjack.Controlador.controlador;
-import ar.edu.unlu.blackjack.Modelo.*;
+import ar.edu.unlu.blackjack.Controlador.Controlador;
+import ar.edu.unlu.blackjack.Modelo.BlackjackJuego;
+import ar.edu.unlu.blackjack.Modelo.Carta;
+import ar.edu.unlu.blackjack.Modelo.Mano;
 
 import java.util.List;
-import java.util.Scanner;
 
-public class VistaConsola {
-    private final controlador controlador;
-    Scanner scanner;
+public final class VistaConsola {
+    private Controlador controlador;
 
-    public VistaConsola() {
-        this.controlador = new controlador();
-        scanner = new Scanner(System.in);
+    public void setControlador(Controlador controlador) {
+        this.controlador = controlador;
     }
 
     public void mostrarMensajeConSaltoLinea(String mensaje) {
@@ -34,17 +33,18 @@ public class VistaConsola {
 
     public static void main(String[] args) {
         VistaConsola vistaConsola = new VistaConsola();
+        Controlador controlador = new Controlador(vistaConsola);
+        vistaConsola.setControlador(controlador);
+        controlador.setModelo(new BlackjackJuego());
         vistaConsola.iniciarJuego();
     }
-
 
     public int solicitarCantidadJugadores(){
         mostrarMensaje("Ingrese la cantidad de jugadores (1 - 7): ");
         boolean salir = false;
-        while (salir == false){
-            String input = scanner.nextLine();
+        while (!salir){
             try {
-                int cantidad = Integer.parseInt(input);
+                int cantidad = Integer.parseInt(controlador.ingresarPorTeclado());
                 if (cantidad >= 1 && cantidad <= 7){
                     return cantidad;
                 }else{
@@ -54,7 +54,7 @@ public class VistaConsola {
                 mostrarMensaje("[!] Debes ingresar una cantidad entre 1 y 7.\n");
             }
         }
-        return -1;
+        return -1; // En el peor de los casos devuelve -1 (Error)
     }
     /*
      * Metodo que inicia el juego y carga los jugadores con sus apuestas
@@ -136,7 +136,7 @@ public class VistaConsola {
         int aux = 0;
         int ases = 0;
         mostrarMensajeConSaltoLinea(controlador.getNombreJugador() + " tiene las siguientes cartas:");
-        for (Carta carta : controlador.modelo.getListaCartasMano()) {
+        for (Carta carta : controlador.getCartasMano()) {
             mostrarMensajeConSaltoLinea(carta.getValor() + " de " + carta.getPalo());
             sumatoriaPuntaje += carta.getValorNumerico();
             if (carta.getValorNumerico() == 11) ases++;
@@ -273,7 +273,6 @@ public class VistaConsola {
         boolean yaPregunto = false;
         boolean flagDoblo = false;
         boolean yaMostroMano = false;
-        String ingreso;
         Mano mano = controlador.obtenerManoJugador();
         if (mano != null){
             if (controlador.getJugadorTieneBlackjack()){
@@ -309,8 +308,8 @@ public class VistaConsola {
                     mostrarMensaje(controlador.getNombreJugador() + ": ingrese 'c' para pedir, 'd' para doblar, 's' para dividir o 'p' para plantarse: ");
                 }else if (!controlador.getJugadorPuedeDividir()) mostrarMensaje(controlador.getNombreJugador() + ": ingrese 'c' para pedir, 'd' para doblar o 'p' para plantarse: ");
                 else if (!controlador.getJugadorPuedeDividir() && yaPidio) mostrarMensaje(controlador.getNombreJugador() + ": ingrese 'c' para pedir o 'p' para plantarse: ");
-                ingreso = controlador.ingresarPorTeclado().toLowerCase();
-                if (ingreso.equals("c")){
+                String inputDecision = controlador.ingresarPorTeclado().toLowerCase();
+                if (inputDecision.equals("c")){
                     controlador.recibirCartaJugador();
                     mostrarManoJugadorVista();
                     if (controlador.getPuntajeMano() > 21){
@@ -318,10 +317,10 @@ public class VistaConsola {
                         break;
                     }
                     yaPidio = true;
-                }else if (ingreso.equals("p")){
+                }else if (inputDecision.equals("p")){
                     mostrarMensajeConSaltoLinea(controlador.getNombreJugador() + " se plantó");
                     break;
-                }else if (ingreso.equals("s")){
+                }else if (inputDecision.equals("s")){
                     if ((controlador.getSaldoJugadorActual() >= controlador.getApuestaJugador()) && controlador.compararDosCartasIguales()){
                         mostrarMensajeConSaltoLinea(controlador.getNombreJugador() + " decidió dividir");
                         controlador.dividirManoJugador();
@@ -341,13 +340,13 @@ public class VistaConsola {
                                     break;
                                 }
                                 while ((!manos.get(i).sePaso21() && manos.get(i).getPuntaje() != 21) && !flagDoblo){
-                                    String ingresoDividir;
+                                    // String ingresoDividir;
                                     if (!imprimioPrimeraVez) mostrarManosDivididasJugadorVista();
                                     imprimioPrimeraVez = true;
                                     mostrarMensajeConSaltoLinea("Es el turno de: " + controlador.getNombreJugador() + " con la mano " + (i+1) + " ---> (" + controlador.getPuntajeManosIndices(i) + ")");
                                     mostrarMensaje(controlador.getNombreJugador() + ": ingrese 'c' para pedir, 'd' para doblar o 'p' para plantarse: ");
-                                    ingresoDividir = controlador.ingresarPorTeclado().toLowerCase();
-                                    if (ingresoDividir.equals("c")){
+                                    // inputDecision = controladorConsolaGrafica.ingresarPorTeclado().toLowerCase();
+                                    if (inputDecision.equals("c")){
                                         controlador.setRepartirCartaAMano(i);
                                         mostrarManosDivididasJugadorVista();
                                         if (controlador.getSePaso21Index(i)){
@@ -357,11 +356,11 @@ public class VistaConsola {
                                         }
                                         yaPidio = true;
                                         break;
-                                    }else if (ingresoDividir.equals("p")){
+                                    }else if (inputDecision.equals("p")){
                                         mostrarMensajeConSaltoLinea(controlador.getNombreJugador() + " se plantó con la mano " + (i + 1) + ".");
                                         termino = true;
                                         break;
-                                    }else if (ingresoDividir.equals("d")){
+                                    }else if (inputDecision.equals("d")){
                                         if (controlador.getSaldoJugadorActual() >= controlador.getApuestaJugador() && !yaPidio){
                                             mostrarMensajeConSaltoLinea(controlador.getNombreJugador() + " dobló con la mano " + (i + 1) + ".");
                                             controlador.setRepartirCartaAMano(i);
@@ -390,11 +389,14 @@ public class VistaConsola {
                         mostrarMensajeConSaltoLinea("[!] No podés dividir dado que no tenés dos cartas iguales!");
                     }
                 }
-                else if (ingreso.equals("d")){
+                else if (inputDecision.equals("d")){
                     if (controlador.getSaldoJugadorActual() >= controlador.getApuestaJugador() && !yaPidio){
                         mostrarMensajeConSaltoLinea(controlador.getNombreJugador() + " dobló.");
                         controlador.recibirCartaJugador();
                         controlador.jugadorDobloMano();
+                        mostrarManoJugadorVista();
+                        mostrarMensaje("Presione Enter para continuar...");
+                        controlador.ingresarPorTeclado();
                         flagDoblo = true;
                         break;
                     }else if(yaPidio){

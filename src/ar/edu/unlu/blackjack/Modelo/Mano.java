@@ -43,10 +43,10 @@ public class Mano{
     public void recibirCarta(Carta carta){
         this.mano.add(carta);
         actualizarPuntaje();
-        if (tieneAs()){
-            System.out.printf("[LOG] El puntaje del jugador/crupier ha sido actualizado... (%d/%d)\n", getPuntaje()-10, getPuntaje());
-        }
-        else System.out.printf("[LOG] El puntaje del jugador/crupier ha sido actualizado... (%d)\n", getPuntaje());
+//        if (tieneAs()){
+//            System.out.printf("[LOG] El puntaje del jugador/crupier ha sido actualizado... (%d/%d)\n", getPuntaje()-10, getPuntaje());
+//        }
+//        else System.out.printf("[LOG] El puntaje del jugador/crupier ha sido actualizado... (%d)\n", getPuntaje());
     }
 
     public void actualizarPuntaje() {
