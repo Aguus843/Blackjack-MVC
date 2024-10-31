@@ -93,7 +93,7 @@ public final class VistaConsola {
                     }
                     // Leo al ultimo jugador en caso de que sea > 1
                     if (controlador.getIndiceJugadorActual() == controlador.getCantidadJugadoresTotal()-1){
-                        mostrarMensajeConSaltoLinea(controlador.obtenerJugadorActual().getNombre() + " tu saldo actual es de " + controlador.obtenerJugadorActual().getSaldo() + " pesos.");
+                        mostrarMensajeConSaltoLinea(controlador.getNombreJugador() + " tu saldo actual es de " + controlador.getSaldoJugadorActual() + " pesos.");
                     }
                 }
                 if (controlador.getIndiceJugadorActual() == controlador.getCantidadJugadoresTotal()) {
