@@ -14,7 +14,7 @@ public class Mazo {
         // Tests
         // String[] valores = {"A", "J", "10", "K", "Q"};
         // String[] valores = {"A", "2", "3", "4", "5"};
-        // String[] valores = {"A", "2"};
+        // String[] valores = {"A", "K"};
 
         // Inicializo las cartas con sus valores
         for (String palo : palos) {
@@ -45,8 +45,9 @@ public class Mazo {
     // Hago un metodo para volver a barajar (Reinicio)
     public void reiniciarBaraja(){
         cartas.clear();
-        String[] palos = {"Diamantes, Treboles, Corazones, Picas"};
-        String[] valores = {"2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"};
+        String[] palos = {"Diamantes", "Tréboles", "Corazones", "Picas"};
+        String[] valores = {"A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"};
+        // String[] valores = {"A", "K"};
 
         // Inicializo las cartas con sus valores
         for (String palo : palos) {

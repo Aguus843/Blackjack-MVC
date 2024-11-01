@@ -49,10 +49,6 @@ public class Jugador {
             }
         }
     }
-
-    public void setTurno(boolean turno){
-        this.esTurno = turno;
-    }
     public boolean getSeBajo(){
         return this.seBajo;
     }
@@ -197,12 +193,27 @@ public class Jugador {
     public void setPagoSeguro(boolean b) {
         this.pagoSeguro = b;
     }
+//    public boolean tieneBlackjack(){
+//        List<Mano> manos = getManos();
+//        for (Mano mano : manos) {
+//            if ((mano.getManoCrupier().getFirst().equals("A")) && (mano.getManoCrupier().get(1).equals("10") || mano.getManoCrupier().get(1).equals("J") || mano.getManoCrupier().get(1).equals("Q") || mano.getManoCrupier().get(1).equals("K"))) {
+//                return true;
+//            } else
+//                return (mano.getManoCrupier().getFirst().equals("10") || mano.getManoCrupier().getFirst().equals("J") || mano.getManoCrupier().getFirst().equals("Q") || mano.getManoCrupier().getFirst().equals("K") && mano.getManoCrupier().get(1).getValor().equals("A"));
+//        }
+//        return false;
+//    }
     public boolean tieneBlackjack(){
         List<Mano> manos = getManos();
-        for (int i = 0; i < manos.size(); i++){
-            if ((manos.get(i).getMano().getFirst().equals("A")) && (manos.get(i).getMano().get(1).equals("10") || manos.get(i).getMano().get(1).equals("J") || manos.get(i).getMano().get(1).equals("Q") || manos.get(i).getMano().get(1).equals("K"))){
+        for (Mano mano : manos) {
+            String primeraCarta = mano.getMano().getFirst().getValor(); // Asegúrate de que `getValor()` devuelve el valor como String
+            String segundaCarta = mano.getMano().get(1).getValor();
+
+            if (primeraCarta.equals("A") && (segundaCarta.equals("10") || segundaCarta.equals("J") || segundaCarta.equals("Q") || segundaCarta.equals("K"))) {
                 return true;
-            }else return (manos.get(i).getMano().getFirst().equals("10") || manos.get(i).getMano().getFirst().equals("J") || manos.get(i).getMano().getFirst().equals("Q") || manos.get(i).getMano().getFirst().equals("K") && manos.get(i).getMano().get(1).getValor().equals("A"));
+            } else if ((primeraCarta.equals("10") || primeraCarta.equals("J") || primeraCarta.equals("Q") || primeraCarta.equals("K")) && segundaCarta.equals("A")) {
+                return true;
+            }
         }
         return false;
     }

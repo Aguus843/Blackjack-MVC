@@ -259,6 +259,18 @@ public class controladorConsolaGrafica implements Observador{
         return modelo.getJugadorPidioCarta();
     }
 
+    public void clearJugadores(){
+        modelo.clearJugadores();
+    }
+
+    public void clearManoCrupier(){
+        modelo.clearCartasCrupier();
+    }
+
+    public void resetBaraja(){
+        modelo.reiniciarBarajaMazo();
+    }
+
     @Override
     public void update(Observable o, Object arg){
         if (arg instanceof Evento){
@@ -270,7 +282,7 @@ public class controladorConsolaGrafica implements Observador{
                     this.vista.mostrarMensaje("Felicitaciones, obtuviste un BJ!");
                     break;
                 case CRUPIER_BLACKJACK:
-                    this.vista.mostrarMensaje("El crupier obtuvo BJ! Perdiste la ronda.");
+                    this.vista.mostrarMensaje("El crupier obtuvo BJ!");
                     break;
                 case SALDO_RESTADO:
                     // this.vista.mostrarJugadorSaldoRestado();
@@ -287,6 +299,7 @@ public class controladorConsolaGrafica implements Observador{
                     break;
                 case SALDO_AGREGADO_EMPATE:
                     this.vista.mostrarMensaje("Se te devolvió el monto apostado! (" + this.getApuestaJugador() + ")");
+                    break;
                 case JUGADOR_PAGO_SEGURO:
                     this.vista.mostrarMensaje("Pagaste el seguro de Blackjack! (" + this.getApuestaJugador()/2 + ")");
                     break;
@@ -314,7 +327,7 @@ public class controladorConsolaGrafica implements Observador{
                     this.vista.mostrarMensaje("El puntaje final del crupier es: " + this.getPuntajeCrupier());
                     break;
                 case ADJUDICAR_GANANCIA:
-                    this.vista.mostrarMensaje("Felicitaciones! Ganaste la apuesta --> (" + this.getApuestaJugador()*2 + ").");
+                    this.vista.mostrarMensaje("Felicitaciones! Ganaste la apuesta --> ($" + this.getApuestaJugador()*2 + ").");
                     break;
                 default:
                     break;

@@ -180,7 +180,7 @@ public class BlackjackJuego implements Observable {
         return jugadores.get(indiceJugador).getManos().get(index).sePaso21();
     }
     public List<Carta> getManoCrupier(){
-        return crupier.getMano();
+        return crupier.getManoCarta();
     }
     public int getPuntajeCrupier(){
         return crupier.getPuntajeCrupier();
@@ -222,6 +222,15 @@ public class BlackjackJuego implements Observable {
     }
     public boolean getJugadorPidioCarta(){
         return getJugadorActualTurno().getJugadorPidioCarta();
+    }
+    public void clearJugadores(){
+        jugadores.clear();
+    }
+    public void clearCartasCrupier(){
+        crupier.clearMano();
+    }
+    public void reiniciarBarajaMazo(){
+        mazo.reiniciarBaraja();
     }
 
     public boolean realizarApuesta(){
@@ -303,7 +312,7 @@ public class BlackjackJuego implements Observable {
 //        if (crupier.tieneBlackjack()) notificarObservadores(Evento.CRUPIER_BLACKJACK);
 //        else notificarObservadores(Evento.EMPATO_JUGADOR);
         jugador.ajustarSaldo(apuesta);
-        if (crupier.tieneBlackjack()){
+        if (crupier.tieneBlackjack() && jugador.getPagoSeguro()){
             notificarObservadores(Evento.DEVUELTO_POR_SEGURO);
         }
         notificarObservadores(Evento.SALDO_AGREGADO_EMPATE);

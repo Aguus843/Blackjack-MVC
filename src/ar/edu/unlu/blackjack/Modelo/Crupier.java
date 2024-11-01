@@ -11,8 +11,11 @@ public class Crupier extends Jugador{
         mano = new Mano();
     }
 
-    public List<Carta> getMano(){
+    public List<Carta> getManoCarta(){
         return mano.getMano();
+    }
+    public Mano getManoCrupier(){
+        return mano;
     }
     public int getPuntajeCrupier(){
         return mano.getPuntaje();
@@ -20,14 +23,17 @@ public class Crupier extends Jugador{
     public void pedirCarta(Carta carta){
         mano.recibirCarta(carta);
     }
+    public void clearMano(){
+        mano.nuevaMano();
+    }
     public boolean tieneAsPrimera(){
-        return getMano().getFirst().getValor().equals("A");
+        return getManoCrupier().getMano().getFirst().getValor().equals("A");
     }
     public String getPrimeraCartaValor(){
-        return getMano().getFirst().getValor();
+        return getManoCrupier().getMano().getFirst().getValor();
     }
     public String getPrimeraCartaPalo(){
-        return getMano().getFirst().getPalo();
+        return getManoCrupier().getMano().getFirst().getPalo();
     }
 
     // Metodo para saber si debe pedir otra carta
@@ -44,10 +50,20 @@ public class Crupier extends Jugador{
             return ("No se puede mostrar el carta de crupier dado que no tiene ninguna.");
         }else{
             // System.out.println("La primera carta del crupier es: ");
-            // System.out.printf("La primera carta del crupier es: %s de %s\n", mano.getMano().get(0).getValor(), mano.getMano().get(0).getPalo());
+            // System.out.printf("La primera carta del crupier es: %s de %s\n", mano.getManoCrupier().get(0).getValor(), mano.getManoCrupier().get(0).getPalo());
             return mano.getMano().get(0).getValor() + " de " + mano.getMano().get(0).getPalo();
             // Imprime la primera carta del crupier siendo que la segunda está oculta.
         }
+    }
+
+    @Override
+    public boolean tieneBlackjack(){
+        Mano manoCheck = getManoCrupier();
+        String primeraCarta = manoCheck.getMano().getFirst().getValor();
+        String segundaCarta = manoCheck.getMano().get(1).getValor();
+        if (primeraCarta.equals("A") && (segundaCarta.equals("10") || segundaCarta.equals("J") || segundaCarta.equals("Q") || segundaCarta.equals("K"))) {
+            return true;
+        } else return (primeraCarta.equals("10") || primeraCarta.equals("J") || primeraCarta.equals("Q") || primeraCarta.equals("K")) && segundaCarta.equals("A");
     }
 
     public void mostrarMano(){
@@ -73,7 +89,8 @@ public class Crupier extends Jugador{
     }
 
     public boolean tieneCarta(){
-        return getMano().size() > 0;
+        // return getManoCrupier().size() > 0;
+        return !getManoCrupier().getMano().isEmpty();
     }
 
 }
