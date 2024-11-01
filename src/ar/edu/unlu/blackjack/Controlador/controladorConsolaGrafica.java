@@ -7,11 +7,10 @@ import java.util.List;
 
 public class controladorConsolaGrafica implements Observador{
     private BlackjackJuego modelo;
-    private VistaConsola vista;
+    private consolaGrafica vista;
 
     public controladorConsolaGrafica(consolaGrafica vista){
-        this.modelo = new BlackjackJuego();
-        // this.vista = new VistaConsola();
+        this.vista = vista;
     }
 
     public void configurarJugadores(String nickname, int saldo){
@@ -20,10 +19,6 @@ public class controladorConsolaGrafica implements Observador{
 
     public void setModelo(BlackjackJuego modelo){
         this.modelo = modelo;
-    }
-
-    public boolean realizarApuesta(){
-        return modelo.realizarApuesta();
     }
 
     public void crupierPideCarta(){
@@ -50,7 +45,7 @@ public class controladorConsolaGrafica implements Observador{
     }
 
     public void evaluandoGanadores(){
-        modelo.evaluarGanadores();
+        modelo.evaluarGanadoresInterfazGrafica();
     }
 
     public String ingresarPorTeclado(){
@@ -68,8 +63,8 @@ public class controladorConsolaGrafica implements Observador{
         return modelo.getCantidadJugadores();
     }
 
-    public boolean cargarApuestaJugador(Jugador jugador){
-        return modelo.cargarApuesta(jugador);
+    public boolean cargarApuestaJugador(String monto){
+        return modelo.realizarApuestaConsolaGrafica(monto);
     }
 
     public boolean crupierTieneCarta(){
@@ -236,18 +231,50 @@ public class controladorConsolaGrafica implements Observador{
         return modelo.getManosJugador();
     }
 
+    public List<Carta> getCartasMano(){
+        return modelo.getListaCartasMano();
+    }
+
+    public void setPagoSeguroJugador(Jugador jugador, boolean b){
+        modelo.setPagoSeguroJugador(jugador, b);
+    }
+
+    public int getMontoApostado(){
+        return modelo.getMontoApostado();
+    }
+
+    public void setMontoApostado(int monto){
+        modelo.setMontoApostado(monto);
+    }
+
+    public boolean getPagoSeguroJugador(){
+        return modelo.getPagoSeguroJugador();
+    }
+
+    public void setJugadorPidioCarta(boolean b){
+        modelo.setJugadorPidioCarta(b);
+    }
+
+    public boolean getJugadorPidioCarta(){
+        return modelo.getJugadorPidioCarta();
+    }
+
     @Override
     public void update(Observable o, Object arg){
         if (arg instanceof Evento){
             switch ((Evento) arg){
+                case ESPACIADOR_EN_CHAT:
+                    this.vista.mostrarMensaje("========================================================");
+                    break;
                 case BLACKJACK:
-                    this.vista.mostrarMensaje("Felicitaciones, ganaste con un BJ!");
+                    this.vista.mostrarMensaje("Felicitaciones, obtuviste un BJ!");
                     break;
                 case CRUPIER_BLACKJACK:
                     this.vista.mostrarMensaje("El crupier obtuvo BJ! Perdiste la ronda.");
                     break;
                 case SALDO_RESTADO:
-                    this.vista.mostrarMensaje("Se te restó saldo de tu cuenta! " + this.getApuestaJugador());
+                    // this.vista.mostrarJugadorSaldoRestado();
+                    this.vista.mostrarMensaje("Se le restó " + (-this.getMontoApostado()) + " del saldo disponible.");
                     break;
                 case EMPATO_JUGADOR:
                     this.vista.mostrarMensaje("Empataste con el crupier. Se te devolvió el monto apostado.");
@@ -258,14 +285,18 @@ public class controladorConsolaGrafica implements Observador{
                 case SALDO_AGREGADO:
                     this.vista.mostrarMensaje("Se te agregó saldo a tu cuenta! " + this.getApuestaJugador()*2);
                     break;
+                case SALDO_AGREGADO_EMPATE:
+                    this.vista.mostrarMensaje("Se te devolvió el monto apostado! (" + this.getApuestaJugador() + ")");
                 case JUGADOR_PAGO_SEGURO:
                     this.vista.mostrarMensaje("Pagaste el seguro de Blackjack! (" + this.getApuestaJugador()/2 + ")");
                     break;
                 case CRUPIER_BLACKJACK_Y_EMPATE:
                     this.vista.mostrarMensaje("Como ambos tuvieron Blackjack, se te concedió el empate! Se te devolvió el monto apostado.");
                     break;
+                case DEVUELTO_POR_SEGURO:
+                    this.vista.mostrarMensaje("Dado que el crupier tuvo BJ y vos también, se te devolvió el monto apostado por el seguro.");
                 case PERDIO_JUGADOR:
-                    this.vista.mostrarMensaje("El jugador " + getNombreJugador() + " ha perdido.");
+                    this.vista.mostrarMensaje("El jugador " + this.getNombreJugador() + " ha perdido.");
                     break;
                 case GANADOR_JUGADOR:
                     this.vista.mostrarMensaje("Felicidades " + getNombreJugador() + " ganaste!");
@@ -274,6 +305,16 @@ public class controladorConsolaGrafica implements Observador{
                     this.vista.mostrarMensaje("Mano de finalizada");
                     break;
                 case JUGADA_REALIZADA:
+                    this.vista.mostrarMensaje("null");
+                    break;
+                case PUNTUACION_FINAL_JUGADOR:
+                    this.vista.mostrarMensaje("El puntaje final de " + this.getNombreJugador() + " es: " + getPuntajeMano());
+                    break;
+                case PUNTUACION_FINAL_CRUPIER:
+                    this.vista.mostrarMensaje("El puntaje final del crupier es: " + this.getPuntajeCrupier());
+                    break;
+                case ADJUDICAR_GANANCIA:
+                    this.vista.mostrarMensaje("Felicitaciones! Ganaste la apuesta --> (" + this.getApuestaJugador()*2 + ").");
                     break;
                 default:
                     break;

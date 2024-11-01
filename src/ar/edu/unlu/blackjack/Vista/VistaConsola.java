@@ -7,7 +7,7 @@ import ar.edu.unlu.blackjack.Modelo.Mano;
 
 import java.util.List;
 
-public final class VistaConsola {
+public class VistaConsola {
     private Controlador controlador;
 
     public void setControlador(Controlador controlador) {
@@ -31,13 +31,13 @@ public final class VistaConsola {
         return controlador.cartasRestantes();
     }
 
-    public static void main(String[] args) {
-        VistaConsola vistaConsola = new VistaConsola();
-        Controlador controlador = new Controlador(vistaConsola);
-        vistaConsola.setControlador(controlador);
-        controlador.setModelo(new BlackjackJuego());
-        vistaConsola.iniciarJuego();
-    }
+//    public static void main(String[] args) {
+//        VistaConsola vistaConsola = new VistaConsola();
+//        Controlador controlador = new Controlador(vistaConsola);
+//        vistaConsola.setControlador(controlador);
+//        controlador.setModelo(new BlackjackJuego());
+//        vistaConsola.iniciarJuego();
+//    }
 
     public int solicitarCantidadJugadores(){
         mostrarMensaje("Ingrese la cantidad de jugadores (1 - 7): ");

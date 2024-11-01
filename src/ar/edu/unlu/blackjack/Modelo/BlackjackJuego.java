@@ -13,7 +13,7 @@ public class BlackjackJuego implements Observable {
     private final Scanner scanner;
     private int cantidadJugadores;
     private int indiceJugador;
-    private ArrayList<controladorConsolaGrafica> misObservadores;
+    private final ArrayList<controladorConsolaGrafica> misObservadores;
 
     public BlackjackJuego() {
         mazo = new Mazo();
@@ -38,8 +38,11 @@ public class BlackjackJuego implements Observable {
             misObservadores.get(i).update(this, evento);
         }
     }
+    public Mazo getMazo(){
+        return mazo;
+    }
     public void crupierPideCarta(){
-        crupier.pedirCarta();
+        crupier.pedirCarta(mazo.repartirCarta());
     }
     public String crupierMuestraPrimerCarta(){
         return crupier.mostrarPrimeraCarta();
@@ -193,6 +196,7 @@ public class BlackjackJuego implements Observable {
     }
     public void setAjustarSaldo(Jugador jugador, int monto){
         jugador.ajustarSaldo(monto);
+        jugador.setMonto(monto);
         if (monto > 0){
             notificarObservadores(Evento.SALDO_AGREGADO);
         }else notificarObservadores(Evento.SALDO_RESTADO);
@@ -200,6 +204,24 @@ public class BlackjackJuego implements Observable {
     public void setApuesta(Jugador jugador, int monto){
         jugador.setApuesta(monto);
         notificarObservadores(Evento.JUGADOR_APOSTO);
+    }
+    public void setPagoSeguroJugador(Jugador jugador, boolean b){
+        jugador.setPagoSeguro(b);
+    }
+    public boolean getPagoSeguroJugador(){
+        return getJugadorActualTurno().getPagoSeguro();
+    }
+    public int getMontoApostado(){
+        return getJugadorActualTurno().getMontoDeApuesta();
+    }
+    public void setMontoApostado(int monto){
+        getJugadorActualTurno().setMonto(monto);
+    }
+    public void setJugadorPidioCarta(boolean b){
+        getJugadorActualTurno().setJugadorPidioCarta(b);
+    }
+    public boolean getJugadorPidioCarta(){
+        return getJugadorActualTurno().getJugadorPidioCarta();
     }
 
     public boolean realizarApuesta(){
@@ -211,6 +233,16 @@ public class BlackjackJuego implements Observable {
         setAjustarSaldo(getJugadorActualTurno(), -monto);
         setApuesta(getJugadorActualTurno(), monto);
         // getJugadorActualTurno().mostrarSaldo();
+        getJugadorActualTurno().iniciarMano();
+        return true;
+    }
+    public boolean realizarApuestaConsolaGrafica(String monto){
+        if (this.indiceJugador == jugadores.size()) return true;
+        if (Integer.parseInt(monto) > getSaldoJugador() || Integer.parseInt(monto) <= 1){
+            return false;
+        }
+        setAjustarSaldo(getJugadorActualTurno(), -Integer.parseInt(monto));
+        setApuesta(getJugadorActualTurno(), Integer.parseInt(monto));
         getJugadorActualTurno().iniciarMano();
         return true;
     }
@@ -227,7 +259,6 @@ public class BlackjackJuego implements Observable {
     }
 
     public void repartirCartasIniciales(Jugador jugador){
-        Mano mano;
         for (int i = 0; i < 2; i++){
             for (int j = 0; j < jugador.getManos().size(); j++){
                 jugador.repartirCartaAMano(j, mazo.repartirCarta());
@@ -240,6 +271,11 @@ public class BlackjackJuego implements Observable {
         else evaluarGanadoresNOBlackjack();
     }
 
+    public void evaluarGanadoresInterfazGrafica(){
+        if (crupier.tieneBlackjack()) evaluarGanadoresBlackjack();
+        else evaluarGanadoresNOBlackjackInterfazGrafica();
+    }
+
     public void evaluarGanadoresBlackjack(){ // Entra si el crupier tiene Blackjack
         System.out.println("El crupier obtuvo blackjack.");
         notificarObservadores(Evento.CRUPIER_BLACKJACK);
@@ -248,7 +284,6 @@ public class BlackjackJuego implements Observable {
             List<Mano> manos = jugadores.get(i).getManos();
             if (jugadores.get(i).tieneBlackjack()){
                 // System.out.println(jugador.getNombre() + ": el crupier también obtuvo Blackjack por lo que es un empate!");
-                notificarObservadores(Evento.BLACKJACK);
                 // System.out.println(jugador.getNombre() + " EMPATÓ!");
                 notificarObservadores(Evento.CRUPIER_BLACKJACK_Y_EMPATE);
                 devolverApuesta(jugadores.get(i), jugadores.get(i).getApuesta());
@@ -257,8 +292,7 @@ public class BlackjackJuego implements Observable {
                     // System.out.println(jugador.getNombre() + ": pagó el seguro por lo que se le devuelve el monto apostado.");
                     // notificarObservadores(Evento.CRUPIER_BLACKJACK);
                     devolverApuesta(jugadores.get(i), jugadores.get(i).getApuesta()); // Se le devuelve el monto de la apuesta -> sería el seguro * 2
-                }
-                notificarObservadores(Evento.PERDIO_JUGADOR);
+                }else notificarObservadores(Evento.PERDIO_JUGADOR);
                 // System.out.println(jugador.getNombre() + " PERDIÓ!");
             }
         }
@@ -266,14 +300,18 @@ public class BlackjackJuego implements Observable {
 
     public void devolverApuesta(Jugador jugador, int apuesta) {
         // System.out.printf("%s: debido al empate se te devolvió el monto apostado (%d)\n", jugador.getNombre(), apuesta);
-        if (crupier.tieneBlackjack()) notificarObservadores(Evento.CRUPIER_BLACKJACK);
-        else notificarObservadores(Evento.EMPATO_JUGADOR);
+//        if (crupier.tieneBlackjack()) notificarObservadores(Evento.CRUPIER_BLACKJACK);
+//        else notificarObservadores(Evento.EMPATO_JUGADOR);
         jugador.ajustarSaldo(apuesta);
+        if (crupier.tieneBlackjack()){
+            notificarObservadores(Evento.DEVUELTO_POR_SEGURO);
+        }
+        notificarObservadores(Evento.SALDO_AGREGADO_EMPATE);
     }
 
     public void adjudicarGanancia(Jugador jugador, int apuesta){
         // System.out.printf("%s: felicitaciones! Ganaste la apuesta.\n", jugador.getNombre());
-        notificarObservadores(Evento.GANADOR_JUGADOR);
+        notificarObservadores(Evento.ADJUDICAR_GANANCIA);
         jugador.ajustarSaldo(2*apuesta);
     }
 
@@ -302,40 +340,83 @@ public class BlackjackJuego implements Observable {
                     }else if (puntajeMano > puntajeCrupier){
                         // System.out.println(jugador.getNombre() + " GANA!");
                         System.out.printf("%s: tu mano es ganadora!", jugador.getNombre());
+                        notificarObservadores(Evento.GANADOR_JUGADOR);
                         adjudicarGanancia(jugador, jugador.getApuesta());
                     }else if (puntajeMano < puntajeCrupier){
+                        notificarObservadores(Evento.PERDIO_JUGADOR);
                         // System.out.println(jugador.getNombre() + " PERDIÓ!");
                         // System.out.printf("%s: el crupier obtuvo mas puntaje que vos. Perdiste la mano!", jugador.getNombre());
                         System.out.printf("PERDISTE!\n");
                     }else{
+                        notificarObservadores(Evento.EMPATO_JUGADOR);
                         System.out.printf("EMPATASTE!\n");
                         devolverApuesta(jugador, jugador.getApuesta());
                     }
                     System.out.println();
                 }
                 System.out.println("El puntaje final del crupier es: " + puntajeCrupier);
+                notificarObservadores(Evento.PUNTUACION_FINAL_CRUPIER);
+                // CORREGIR LO DE ARRIBA PARA QUE FUNCIONE CON DOS MANOS
             }else{
                 System.out.println("========================================================");
+                notificarObservadores(Evento.ESPACIADOR_EN_CHAT);
                 int puntajeManoUnica = jugador.getManoActual().getPuntaje();
                 System.out.println();
                 System.out.printf("El puntaje final de %s es: %d --> ", jugador.getNombre(), jugador.getManoActual().getPuntaje());
+                notificarObservadores(Evento.PUNTUACION_FINAL_JUGADOR);
                 if (jugador.getManoActual().sePaso21()){
+                    notificarObservadores(Evento.PERDIO_JUGADOR);
                     System.out.println(jugador.getNombre() + " se paso de los 21. Perdiste!");
                 }else if (crupier.getPuntaje() > 21){
+                    notificarObservadores(Evento.GANADOR_JUGADOR);
                     System.out.println(jugador.getNombre() + " gana dado que el crupier se paso de 21.");
                     adjudicarGanancia(jugador, jugador.getApuesta());
                 }else if (puntajeManoUnica > puntajeCrupier){
+                    notificarObservadores(Evento.GANADOR_JUGADOR);
                     System.out.println(jugador.getNombre() + " GANA!");
                     adjudicarGanancia(jugador, jugador.getApuesta());
                 }else if (puntajeManoUnica < puntajeCrupier){
+                    notificarObservadores(Evento.PERDIO_JUGADOR);
                     System.out.println(jugador.getNombre() + " PERDIÓ!");
                 }else{
+                    notificarObservadores(Evento.EMPATO_JUGADOR);
                     System.out.println(jugador.getNombre() + " empató con el crupier!");
                     devolverApuesta(jugador, jugador.getApuesta());
                 }
+                notificarObservadores(Evento.PUNTUACION_FINAL_CRUPIER);
                 System.out.println("El puntaje final del crupier es: " + puntajeCrupier);
             }
         }
+    }
 
+    public void evaluarGanadoresNOBlackjackInterfazGrafica(){
+        int puntajeCrupier = crupier.getPuntaje();
+        List<Mano> manos;
+        setIndiceJugador(0);
+        while (getIndice() != getCantidadJugadores()){
+            if (getJugadorActualTurno().multiplesManos()){
+                // Logica para jugador con 2 manos
+            }else{
+                notificarObservadores(Evento.ESPACIADOR_EN_CHAT);
+                int puntajeMano1 = getPuntajeMano1();
+                notificarObservadores(Evento.PUNTUACION_FINAL_JUGADOR);
+                if (getManoJugador().sePaso21()){
+                    notificarObservadores(Evento.PERDIO_JUGADOR);
+                }else if (crupier.getPuntaje() > 21){
+                    notificarObservadores(Evento.GANADOR_JUGADOR);
+                    adjudicarGanancia(getJugadorActualTurno(), getApuestaJugador());
+                }else if (puntajeMano1 > puntajeCrupier){
+                    notificarObservadores(Evento.GANADOR_JUGADOR);
+                    adjudicarGanancia(getJugadorActualTurno(), getApuestaJugador());
+                }else if (puntajeMano1 < puntajeCrupier){
+                    notificarObservadores(Evento.PERDIO_JUGADOR);
+                }else{
+                    notificarObservadores(Evento.EMPATO_JUGADOR);
+                    devolverApuesta(getJugadorActualTurno(), getApuestaJugador());
+                }
+                cambiarTurno();
+            }
+        }
+        notificarObservadores(Evento.PUNTUACION_FINAL_CRUPIER);
     }
 }

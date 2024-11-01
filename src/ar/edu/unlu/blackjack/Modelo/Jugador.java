@@ -14,14 +14,16 @@ public class Jugador {
     private boolean doblo;
     private boolean pagoSeguro;
     private Scanner scanner;
-    private Mazo mazo;
     private boolean esTurno;
     private boolean seBajo;
+    private int montoDeApuesta;
+    private boolean pidioCarta;
 
     public Jugador(String nombre, int saldoInicial) {
         this.nombre = nombre;
         this.manos = new ArrayList<>();
-        mazo = new Mazo();
+        this.montoDeApuesta = 0;
+        this.pidioCarta = false;
         this.puntaje = 0;
         this.saldo = new Saldo(saldoInicial);
         this.apuesta = 0;
@@ -32,9 +34,6 @@ public class Jugador {
         this.seBajo = false;
         this.scanner = new Scanner(System.in);
     }
-    public Mazo getMazo(){
-        return this.mazo;
-    }
     public int getSaldo(){
         return saldo.getSaldo();
     }
@@ -42,16 +41,26 @@ public class Jugador {
         if (monto > 0){
             saldo.agregarSaldo(monto);
             System.out.println("Saldo agregado: " + monto);
-        }else{
+        }else {
             // saldo.retirarSaldo(-monto);
-            if (!saldo.retirarSaldo(-monto)) throw new IllegalArgumentException("[!] Monto insuficiente para hacer la apuesta.");
+            if (!saldo.retirarSaldo(-monto)) {
+                // throw new IllegalArgumentException("[!] Monto insuficiente para hacer la apuesta.");
+                System.out.println("Saldo insuficiente para apostar: " + monto);
+            }
         }
     }
+
     public void setTurno(boolean turno){
         this.esTurno = turno;
     }
     public boolean getSeBajo(){
         return this.seBajo;
+    }
+    public void setJugadorPidioCarta(boolean pidioCarta){
+        this.pidioCarta = pidioCarta;
+    }
+    public boolean getJugadorPidioCarta(){
+        return this.pidioCarta;
     }
 
     public boolean consultarSeguirJugando(String seguir){
@@ -88,6 +97,12 @@ public class Jugador {
     }
     public void setApuesta(int monto){
         this.apuesta = monto;
+    }
+    public void setMonto(int monto){
+        this.montoDeApuesta = monto;
+    }
+    public int getMontoDeApuesta(){
+        return this.montoDeApuesta;
     }
     public boolean getPagoSeguro(){
         return this.pagoSeguro;

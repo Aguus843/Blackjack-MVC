@@ -17,8 +17,8 @@ public class Crupier extends Jugador{
     public int getPuntajeCrupier(){
         return mano.getPuntaje();
     }
-    public void pedirCarta(){
-        mano.recibirCarta(getMazo().repartirCarta());
+    public void pedirCarta(Carta carta){
+        mano.recibirCarta(carta);
     }
     public boolean tieneAsPrimera(){
         return getMano().getFirst().getValor().equals("A");

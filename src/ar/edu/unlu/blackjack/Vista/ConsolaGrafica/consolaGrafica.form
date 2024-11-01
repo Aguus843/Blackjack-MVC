@@ -55,7 +55,7 @@
           <enabled value="true"/>
           <font name="Fira Code" style="2"/>
           <foreground color="-16777216"/>
-          <text value="Blackjack V0.1a"/>
+          <text value="Blackjack v0.1a"/>
         </properties>
       </component>
     </children>
