@@ -111,6 +111,10 @@ public class controladorConsolaGrafica implements Observador{
         return modelo.getApuestaJugador();
     }
 
+    public int getApuestaJugadorMano2(){
+        return modelo.getApuestaJugadorMano2();
+    }
+
     public void ajustarSaldoJugador(int monto){
         modelo.setAjustarApuestaJugador(monto);
     }
@@ -328,6 +332,9 @@ public class controladorConsolaGrafica implements Observador{
                     break;
                 case ADJUDICAR_GANANCIA:
                     this.vista.mostrarMensaje("Felicitaciones! Ganaste la apuesta --> ($" + this.getApuestaJugador()*2 + ").");
+                    break;
+                case APUESTA_AMBAS_MANOS:
+                    this.vista.mostrarMensaje(this.getNombreJugador() + ": tu apuesta para ambas manos son -> Mano 1 (" + this.getApuestaJugador() + ") -> Mano 2 (" + this.getApuestaJugadorMano2() + ").");
                     break;
                 default:
                     break;
