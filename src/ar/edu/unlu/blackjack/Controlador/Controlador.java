@@ -240,12 +240,75 @@ public class Controlador implements Observador{
         return modelo.getListaCartasMano();
     }
 
+    public int getMontoApostado(){
+        return modelo.getMontoApostado();
+    }
+
     /**
      * @param o
      * @param arg
      */
     @Override
     public void update(Observable o, Object arg) {
-
+        if (arg instanceof Evento){
+            switch ((Evento) arg){
+                case ESPACIADOR_EN_CHAT:
+                    this.vista.mostrarMensaje("========================================================");
+                    break;
+                case BLACKJACK:
+                    this.vista.mostrarMensaje("Felicitaciones, obtuviste un BJ!");
+                    break;
+                case CRUPIER_BLACKJACK:
+                    this.vista.mostrarMensaje("El crupier obtuvo BJ!");
+                    break;
+                case SALDO_RESTADO:
+                    // this.vista.mostrarJugadorSaldoRestado();
+                    this.vista.mostrarMensaje("Se le restó " + (-this.getMontoApostado()) + " del saldo disponible.");
+                    break;
+                case EMPATO_JUGADOR:
+                    this.vista.mostrarMensaje("Empataste con el crupier. Se te devolvió el monto apostado.");
+                    break;
+                case JUGADOR_APOSTO:
+                    this.vista.mostrarMensaje("Apostaste el monto de " + this.getApuestaJugador());
+                    break;
+                case SALDO_AGREGADO:
+                    this.vista.mostrarMensaje("Se te agregó saldo a tu cuenta! " + this.getApuestaJugador()*2);
+                    break;
+                case SALDO_AGREGADO_EMPATE:
+                    this.vista.mostrarMensaje("Se te devolvió el monto apostado! (" + this.getApuestaJugador() + ")");
+                    break;
+                case JUGADOR_PAGO_SEGURO:
+                    this.vista.mostrarMensaje("Pagaste el seguro de Blackjack! (" + this.getApuestaJugador()/2 + ")");
+                    break;
+                case CRUPIER_BLACKJACK_Y_EMPATE:
+                    this.vista.mostrarMensaje("Como ambos tuvieron Blackjack, se te concedió el empate! Se te devolvió el monto apostado.");
+                    break;
+                case DEVUELTO_POR_SEGURO:
+                    this.vista.mostrarMensaje("Dado que el crupier tuvo BJ y vos también, se te devolvió el monto apostado por el seguro.");
+                case PERDIO_JUGADOR:
+                    this.vista.mostrarMensaje("El jugador " + this.getNombreJugador() + " ha perdido.");
+                    break;
+                case GANADOR_JUGADOR:
+                    this.vista.mostrarMensaje("Felicidades " + getNombreJugador() + " ganaste!");
+                    break;
+                case MANO_FINALIZADA:
+                    this.vista.mostrarMensaje("Mano de finalizada");
+                    break;
+                case JUGADA_REALIZADA:
+                    this.vista.mostrarMensaje("null");
+                    break;
+                case PUNTUACION_FINAL_JUGADOR:
+                    this.vista.mostrarMensaje("El puntaje final de " + this.getNombreJugador() + " es: " + getPuntajeMano());
+                    break;
+                case PUNTUACION_FINAL_CRUPIER:
+                    this.vista.mostrarMensaje("El puntaje final del crupier es: " + this.getPuntajeCrupier());
+                    break;
+                case ADJUDICAR_GANANCIA:
+                    this.vista.mostrarMensaje("Felicitaciones! Ganaste la apuesta --> ($" + this.getApuestaJugador()*2 + ").");
+                    break;
+                default:
+                    break;
+            }
+        }
     }
 }

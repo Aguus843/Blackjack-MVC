@@ -108,9 +108,6 @@ public class BlackjackJuego implements Observable {
     public int getApuestaJugador(){
         return jugadores.get(indiceJugador).getApuesta();
     }
-    public int getApuestaJugadorMano2(){
-        return jugadores.get(indiceJugador).getApuestaMano2();
-    }
     public void setAjustarApuestaJugador(int monto){
         jugadores.get(indiceJugador).ajustarSaldo(monto);
     }
@@ -143,7 +140,6 @@ public class BlackjackJuego implements Observable {
     }
     public void setDividirMano(){
         getJugadorActualTurno().getManoActual().dividirMano(getJugadorActualTurno());
-        notificarObservadores(Evento.APUESTA_AMBAS_MANOS);
     }
     public void setRepartirCartaAMano(int indice){
         getJugadorActualTurno().repartirCartaAMano(indice, mazo.repartirCarta());
@@ -245,7 +241,6 @@ public class BlackjackJuego implements Observable {
         }
         setAjustarSaldo(getJugadorActualTurno(), -monto);
         setApuesta(getJugadorActualTurno(), monto);
-        // getJugadorActualTurno().mostrarSaldo();
         getJugadorActualTurno().iniciarMano();
         return true;
     }

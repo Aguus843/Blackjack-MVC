@@ -2,8 +2,10 @@ package ar.edu.unlu.blackjack.Vista.ConsolaGrafica;
 
 import ar.edu.unlu.blackjack.Controlador.controladorConsolaGrafica;
 import ar.edu.unlu.blackjack.Modelo.Carta;
+import ar.edu.unlu.blackjack.Modelo.Jugador;
 import ar.edu.unlu.blackjack.Modelo.Mano;
 import ar.edu.unlu.blackjack.Vista.IVista;
+import ar.edu.unlu.blackjack.Vista.VistaConsola;
 
 import javax.swing.*;
 import java.awt.*;
@@ -17,6 +19,7 @@ public class consolaGrafica implements IVista{
     private JTextField txtEntrada;
     private JTextArea txtSalida;
     private JTextField blackjackV01aTextField;
+    private JScrollPane ScrollPane;
 
     controladorConsolaGrafica controlador;
     private int jugadoresRestantes;
@@ -36,7 +39,6 @@ public class consolaGrafica implements IVista{
     private boolean finPartida;
     private boolean pasoCrupier;
     private boolean imprimioCartas;
-    private boolean jugadorTuvoBlackjack;
 
     public consolaGrafica() {
         frame = new JFrame("=== Blackjack ===");
@@ -63,7 +65,6 @@ public class consolaGrafica implements IVista{
         seCargaronTodosLosDatos = false;
         pasoCrupier = false;
         imprimioCartas = false;
-        jugadorTuvoBlackjack = false;
 
         // Configuro para que el boton "Enviar" funcione con enter
         frame.getRootPane().setDefaultButton(btnEnter);
@@ -88,20 +89,11 @@ public class consolaGrafica implements IVista{
                 }else if (estadoJugador >= 0){
                     mostrarEstadosJugador(estadoJugador);
                     if (estadoJugador == 0 || estadoJugador > 1){
-                        procesarDecisionJugador(txtEntrada.getText());
+                        procesarDecisionJugador(txtEntrada.getText().toLowerCase());
                     }
                 }else if (vaDecisionJugador) {
                     procesarDecisionJugador(txtEntrada.getText().toLowerCase());
-                    if ((seCargaronTodosLosDatos && SiguenMasJugadores() && controlador.getPuntajeMano() < 21)){
-                        cicloPartida(); // cambia el turno
-                        if (estadoJugador < 0) {
-                            estadoJugador = checkEstadoMano(); // checkEstadoMano() debe ejecutarse cuando haya iniciado el juego.
-                            if (estadoJugador >= 0) {
-                                mostrarEstadosJugador(estadoJugador);
-                            }
-                        }
-                    }
-                }else if (seCargaronTodosLosDatos && controlador.getPuntajeMano() < 21) { // condicion para comenzar la partida
+                }else if (seCargaronTodosLosDatos && controlador.getPuntajeMano() <= 21) { // condicion para comenzar la partida
                     cicloPartida(); // cambia el turno
                     if (estadoJugador < 0) {
                         estadoJugador = checkEstadoMano(); // checkEstadoMano() debe ejecutarse cuando haya iniciado el juego.
@@ -110,12 +102,6 @@ public class consolaGrafica implements IVista{
                         }
                     }
                 }
-                if (jugadorTuvoBlackjack){
-                    if (controlador.getJugadorTieneBlackjack()){
-                        controlador.cambiarTurnoJugador();
-                    }
-                }
-                if (!SiguenMasJugadores() && flagArrancoPartida) finPartida = true;
                 if (finPartida){
                     // cicloPartida();
                     turnoCrupier();
@@ -127,14 +113,6 @@ public class consolaGrafica implements IVista{
                 txtEntrada.setText("");
             }
         });
-    }
-
-    private boolean SiguenMasJugadores(){
-        return controlador.getIndiceJugadorActual() != controlador.getCantidadJugadoresTotal();
-    }
-
-    private void cambiarTurno(){
-        controlador.cambiarTurnoJugador();
     }
 
     private void reiniciarPartida() {
@@ -156,7 +134,6 @@ public class consolaGrafica implements IVista{
         imprimioCartas = false;
         controlador.clearManoCrupier();
         controlador.resetBaraja();
-        jugadorTuvoBlackjack = false;
     }
 
     public void setControlador(controladorConsolaGrafica controlador) {
@@ -216,11 +193,11 @@ public class consolaGrafica implements IVista{
     }
 
     private void cicloPartida() {
-        if (controlador.getIndiceJugadorActual() == controlador.getCantidadJugadoresTotal()){
-            // chequear condicion
-            turnoCrupier();
-            return;
-        }
+//        if (controlador.getIndiceJugadorActual() == controlador.getCantidadJugadoresTotal()){
+//            // chequear condicion
+//            turnoCrupier();
+//            return;
+//        }
         while (controlador.getIndiceJugadorActual() != controlador.getCantidadJugadoresTotal() && !yaRepartio){
             controlador.repartirCartasIniciales(controlador.obtenerJugadorActual());
             mostrarManoJugadorVista();
@@ -238,9 +215,7 @@ public class consolaGrafica implements IVista{
         flagArrancoPartida = true;
         // mostrarMensaje("DEBUG -> IndiceJugador = " + controlador.getIndiceJugadorActual());
         mostrarMensaje("Es el turno de: " + controlador.getNombreJugador() + "\n");
-        if (controlador.getCantidadJugadoresTotal() > 1 && controlador.getIndiceJugadorActual() >= 1){
-            mostrarManoJugadorVista();
-        }
+        // mostrarManoJugadorVista();
         mostrarMensaje("El saldo del jugador es de: " + controlador.getSaldoJugadorActual());
         if (!controlador.crupierTieneCarta()){
             controlador.crupierPideCarta();
@@ -249,6 +224,11 @@ public class consolaGrafica implements IVista{
         mostrarMensaje("Cartas restantes: " + controlador.cartasRestantes());
         mostrarMensaje("El crupier tiene: " + controlador.crupierMuestraPrimerCarta());
         vaDecisionJugador = true;
+//        if (controlador.getIndiceJugadorActual() == controlador.getCantidadJugadoresTotal()){
+//            turnoCrupier();
+//            finPartida = true;
+//            vaDecisionJugador = false;
+//        }
 
         flag = true; // Flag para intercambiar entre decision y check jugador
     }
@@ -279,7 +259,6 @@ public class consolaGrafica implements IVista{
             // mostrarManoJugadorVista();
             mostrarMensaje("Felicitaciones " + controlador.getNombreJugador() + " conseguiste BJ!");
             vaDecisionJugador = false;
-            jugadorTuvoBlackjack = true;
             if (controlador.getIndiceJugadorActual() == controlador.getCantidadJugadoresTotal()-1){
                 finPartida = true;
             }
@@ -641,6 +620,20 @@ public class consolaGrafica implements IVista{
             }
             if (controlador.getJugadorPidioCarta()) return 5; // Muestra Menu sin posibilidad de doblar ni dividir.
 
+            // Chequeo si todos los jugadores perdieron o no (para modificar finPartida)
+            int indiceAnterior = controlador.getIndiceJugadorActual();
+            controlador.setIndiceJugador(0);
+            while (controlador.getIndiceJugadorActual() != controlador.getCantidadJugadoresTotal()){
+                if (controlador.getPuntajeMano() < 21){
+                    return 0;
+                }else{
+                    finPartida = true;
+                    vaDecisionJugador = false;
+                }
+                controlador.cambiarTurnoJugador();
+            }
+            controlador.setIndiceJugador(indiceAnterior);
+
             return 0; // Continua el juego normalmente
         }
         flag = false;
@@ -657,10 +650,12 @@ public class consolaGrafica implements IVista{
                 vaDecisionJugador = true;
             }
         }else if (decision.equals("p")){
-            mostrarMensaje(controlador.getNombreJugador() + " se plantó con " + controlador.getPuntajeMano() + ".");
+            mostrarMensaje(controlador.getNombreJugador() + " se plantó.");
+            // controlador.cambiarTurnoJugador();
         }else if (decision.equals("s")){
             if ((controlador.getSaldoJugadorActual() >= controlador.getApuestaJugador()) && controlador.compararDosCartasIguales()){
                 mostrarMensaje(controlador.getNombreJugador() + " dividió la mano.");
+                controlador.dividirManoJugador();
                 cargarManoDividida();
             }
         }else if (decision.equals("d")){
@@ -678,25 +673,20 @@ public class consolaGrafica implements IVista{
         vaJugadorActual = true;
         if (controlador.getPuntajeMano() == 21){
             this.mostrarMensaje("Felicitaciones, conseguiste 21!");
-            cambiarTurno();
             vaDecisionJugador = false;
         }else if (controlador.getSePaso21ManoPrincipal()){
             this.mostrarMensaje("Te pasaste de 21. Perdiste.");
             vaDecisionJugador = false;
         }
 
-        if (controlador.getIndiceJugadorActual() == controlador.getCantidadJugadoresTotal()-1 && (controlador.getSePaso21ManoPrincipal() || decision.equals("p"))){
+        if (controlador.getIndiceJugadorActual() == controlador.getCantidadJugadoresTotal()-1 && (controlador.getSePaso21ManoPrincipal() || decision.equals("p") || controlador.getPuntajeMano() == 21)){
             finPartida = true;
             vaDecisionJugador = false;
         }
-        if (decision.equals("p")) cambiarTurno();
-        if (decision.equals("d")) cambiarTurno();
     }
 
     private void cargarManoDividida() {
         mostrarMensaje("Dividiendo manos...");
-        controlador.dividirManoJugador();
-
     }
 
     private void mostrarMenuOpciones(){
@@ -707,6 +697,12 @@ public class consolaGrafica implements IVista{
     }
     private void mostrarMenuOpcionesPuedeDividir(){
         mostrarMensaje(controlador.getNombreJugador() + ": ingrese 'c' para pedir, 'd' para doblar, 's' para dividir o 'p' para plantarse: ");
+    }
+
+
+    public void mostrarJugadorSaldoRestado() {
+        mostrarMensaje("DEBUG -> indiceJugador: " + controlador.getIndiceJugadorActual());
+        mostrarMensaje("Se le restó " + controlador.getApuestaJugador() + " del saldo disponible");
     }
 }
 
