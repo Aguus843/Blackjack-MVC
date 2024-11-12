@@ -84,8 +84,7 @@ public class VistaConsola {
                         mostrarMensaje(controlador.obtenerJugadorActual().getNombre() + ": ingrese el monto a apostar: ");
                         if (!controlador.cargarApuestaJugador(controlador.obtenerJugadorActual())){
                             mostrarMensajeConSaltoLinea("[!] El monto debe ser mayor que uno (1) y debe ser menor al saldo disponible.");
-                        }
-                        seCargoApuesta = true;
+                        }else seCargoApuesta = true;
                     }
                     if (controlador.getIndiceJugadorActual() != controlador.getCantidadJugadoresTotal()) {
                         controlador.cambiarTurnoJugador();
