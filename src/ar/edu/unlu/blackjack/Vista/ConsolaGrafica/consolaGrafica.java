@@ -2,15 +2,15 @@ package ar.edu.unlu.blackjack.Vista.ConsolaGrafica;
 
 import ar.edu.unlu.blackjack.Controlador.controladorConsolaGrafica;
 import ar.edu.unlu.blackjack.Modelo.Carta;
-import ar.edu.unlu.blackjack.Modelo.Jugador;
 import ar.edu.unlu.blackjack.Modelo.Mano;
 import ar.edu.unlu.blackjack.Vista.IVista;
-import ar.edu.unlu.blackjack.Vista.VistaConsola;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Objects;
+import java.util.List;
 
 public class consolaGrafica implements IVista{
     private final JFrame frame;
@@ -19,7 +19,6 @@ public class consolaGrafica implements IVista{
     private JTextField txtEntrada;
     private JTextArea txtSalida;
     private JTextField blackjackV01aTextField;
-    private JScrollPane ScrollPane;
 
     controladorConsolaGrafica controlador;
     private int jugadoresRestantes;
@@ -39,15 +38,19 @@ public class consolaGrafica implements IVista{
     private boolean finPartida;
     private boolean pasoCrupier;
     private boolean imprimioCartas;
+    private boolean jugadorTuvoBlackjack;
+    private boolean esperandoSaldo;
+    private boolean seCargaronJugadores;
+    private boolean inicioMano2;
 
     public consolaGrafica() {
-        frame = new JFrame("=== Blackjack ===");
+        frame = new JFrame("Consola Blackjack");
         frame.setContentPane(contentPane);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         // frame.pack();
         frame.setLocationRelativeTo(null);
-        txtSalida.setBackground(Color.WHITE);
-        txtSalida.setForeground(Color.BLACK);
+        txtSalida.setBackground(Color.BLACK);
+        txtSalida.setForeground(Color.WHITE);
         frame.setSize(600, 400);
         txtSalida.setEditable(false);
         txtSalida.setAutoscrolls(true);
@@ -65,8 +68,13 @@ public class consolaGrafica implements IVista{
         seCargaronTodosLosDatos = false;
         pasoCrupier = false;
         imprimioCartas = false;
+        jugadorTuvoBlackjack = false;
+        esperandoSaldo = false;
+        seCargaronJugadores = false;
+        inicioMano2 = false;
 
-        // Configuro para que el boton "Enviar" funcione con enter
+
+        // Configuro para que el botón "Enviar" funcione con enter
         frame.getRootPane().setDefaultButton(btnEnter);
 
         btnEnter.addActionListener(new ActionListener() {
@@ -75,37 +83,63 @@ public class consolaGrafica implements IVista{
                 txtSalida.append(txtEntrada.getText() + "\n");
                 if (estadoCantidadJugadores == 1){
                     solicitarCantidadJugadores(txtEntrada.getText().toLowerCase());
-                }else if(jugadoresRestantes > 0){
+                }
+                if (jugadoresRestantes > 0 && !seCargaronJugadores) {
+                    // proceso de carga de nickname y saldo del jugador
                     if (esperandoNickname){
-                        procesarSaldoJugadores();
+                        procesarCargaNickname();
+                    }else if (!txtEntrada.getText().matches("\\d*\\.?\\d+")){
+                        controlador.setNickname(txtEntrada.getText());
+                        procesarCargaSaldo();
+                    }else if (esperandoSaldo){
+                        float saldo = Float.parseFloat(txtEntrada.getText());
+                        controlador.setSaldo(saldo);
                         esperandoNickname = false;
-                        nickname = txtEntrada.getText();
-                    }else{
-                        esperandoNickname = true;
-                        procesarNicknameJugador(nickname, txtEntrada.getText());
+                        esperandoSaldo = false;
+                        cargarJugador();
                     }
-                }else if (cargarApuestas){
+                    if (jugadoresRestantes == 0){
+                        controlador.setIndiceJugador(0);
+                        mostrarMensaje("Comenzando la carga de apuestas...");
+                        procesarCargaApuestas("");
+                        seCargaronJugadores = true;
+                        jugadoresRestantes = cantJugadoresAgregados;
+                        controlador.setCantidadJugadoresTotales(cantJugadoresAgregados);
+                    }
+                }else if (jugadoresRestantes > 0){
                     procesarCargaApuestas(txtEntrada.getText());
-                }else if (estadoJugador >= 0){
-                    mostrarEstadosJugador(estadoJugador);
-                    if (estadoJugador == 0 || estadoJugador > 1){
-                        procesarDecisionJugador(txtEntrada.getText().toLowerCase());
-                    }
-                }else if (vaDecisionJugador) {
-                    procesarDecisionJugador(txtEntrada.getText().toLowerCase());
-                }else if (seCargaronTodosLosDatos && controlador.getPuntajeMano() <= 21) { // condicion para comenzar la partida
-                    cicloPartida(); // cambia el turno
-                    if (estadoJugador < 0) {
-                        estadoJugador = checkEstadoMano(); // checkEstadoMano() debe ejecutarse cuando haya iniciado el juego.
-                        if (estadoJugador >= 0) {
-                            mostrarEstadosJugador(estadoJugador);
+                    if (jugadoresRestantes == 0){
+                        controlador.setIndiceJugador(0);
+                        mostrarMensaje("Comenzando partida...");
+                        cicloPartida();
+                        if (estadoJugador < 0){
+                            estadoJugador = checkEstadoMano();
+                            if (estadoJugador >= 0) mostrarEstadosJugador(estadoJugador);
                         }
                     }
+                    // ------- lógica partida comenzada --------
+                }else if (flagArrancoPartida){
+                    procesarDecisionJugador(txtEntrada.getText().toLowerCase(), controlador.manoAUsar());
+                    if (!chequearSiTerminoPartida()){
+                        if (estadoJugador < 0 && controlador.getJugadorDividio()){
+                            estadoJugador = checkEstadoManosDivididas(controlador.manoAUsar());
+                            if (estadoJugador >= 0) mostrarEstadosJugador(estadoJugador);
+                        }
+                    }else if (estadoJugador < 0 && !flag){ // flag -> jugador intento dividir
+                        estadoJugador = checkEstadoMano();
+                        if (estadoJugador > 0) mostrarEstadosJugador(estadoJugador);
+                    }
+                }else if (estadoJugador >= 0){
+                    mostrarEstadosJugador(estadoJugador);
+                    if (estadoJugador == 0 || estadoJugador > 1) {
+                        procesarDecisionJugador(txtEntrada.getText().toLowerCase(), controlador.manoAUsar());
+                    }
+                }else if (vaDecisionJugador){
+                    procesarDecisionJugador(txtEntrada.getText().toLowerCase(), controlador.manoAUsar());
                 }
-                if (finPartida){
-                    // cicloPartida();
-                    turnoCrupier();
-                }else if (pasoCrupier){
+
+                // condición para chequear si termino la partida contando el índice de jugadores -> si es fin termina y el crupier agarra cartas
+                if (chequearSiTerminoPartida() && flagArrancoPartida){
                     procesarGanadores();
                     reiniciarPartida();
                 }
@@ -113,6 +147,41 @@ public class consolaGrafica implements IVista{
                 txtEntrada.setText("");
             }
         });
+    }
+    private boolean chequearSiTerminoPartida(){
+        return controlador.getIndiceJugadorActual() == controlador.getCantidadJugadoresTotal();
+    }
+
+    private void cargarJugador(){
+        controlador.configurarJugadores(controlador.getNickname(), (float) controlador.getSaldo());
+        esperandoNickname = true;
+        esperandoSaldo = false;
+        jugadoresRestantes--;
+        cantJugadoresAgregados++;
+        cambiarTurno();
+        if (jugadoresRestantes > 0){
+            procesarCargaNickname();
+        }
+    }
+    private void procesarCargaNickname() {
+        if (jugadoresRestantes == 0){
+            return;
+        }
+        mostrarMensaje("Ingrese el nombre del jugador " + (cantJugadoresAgregados+1) + ": ");
+        esperandoNickname = false;
+        esperandoSaldo = true;
+
+    }
+    private void procesarCargaSaldo() {
+        if (jugadoresRestantes == 0){
+            mostrarMensaje("Todos los jugadores fueron agregados con éxito.");
+            return;
+        }
+        mostrarMensaje("Ingrese el saldo del jugador " + (cantJugadoresAgregados+1) + ": ");
+    }
+
+    private void cambiarTurno(){
+        controlador.cambiarTurnoJugador();
     }
 
     private void reiniciarPartida() {
@@ -134,6 +203,9 @@ public class consolaGrafica implements IVista{
         imprimioCartas = false;
         controlador.clearManoCrupier();
         controlador.resetBaraja();
+        jugadorTuvoBlackjack = false;
+        seCargaronJugadores = false;
+        inicioMano2 = false;
     }
 
     public void setControlador(controladorConsolaGrafica controlador) {
@@ -148,28 +220,24 @@ public class consolaGrafica implements IVista{
         mostrarMensaje("=============================================");
     }
 
-    private void procesarCargaApuestas(String text) {
-        if (text == null){
-            mostrarMensaje(controlador.getNombreJugador() + ": ingrese el monto a apostar: ");
+    private void procesarCargaApuestas(String monto) {
+        if (!monto.matches("\\d*\\.?\\d+") && controlador.getNombreJugador() != null){
+            this.mostrarMensaje(controlador.getNombreJugador() + ": ingrese el monto a apostar (Saldo: $" + controlador.getSaldo() + "): ");
+            return;
         }
-        if (!controlador.cargarApuestaJugador(text)){
-            mostrarMensaje("[!] El monto debe ser mayor que uno (1) y debe ser menor al saldo disponible." + " ($" + controlador.getSaldoJugadorActual() + ")");
-            mostrarMensaje(controlador.getNombreJugador() + ": ingrese el monto a apostar: ");
-            // return false;
-        }else{
-            if (controlador.getIndiceJugadorActual() < controlador.getCantidadJugadoresTotal()-1){
-                controlador.cambiarTurnoJugador();
-                mostrarMensaje(controlador.getNombreJugador() + ": ingrese el monto a apostar: ");
-            }else if (controlador.getIndiceJugadorActual() == controlador.getCantidadJugadoresTotal()-1){
-                mostrarMensaje("Presione Enter para continuar...");
-                cargarApuestas = false;
-                vaJugadorActual = true;
-                estadoApuestas = 1;
-                seCargaronTodosLosDatos = true;
-                // controlador.cambiarTurnoJugador();
-                controlador.setIndiceJugador(0);
+        if (!Objects.equals(monto, "")){
+            controlador.setMontoApostado(Float.parseFloat(monto));
+            if (!controlador.cargarApuestaJugador(monto)) {
+                mostrarMensaje("Error al apostar. Monto excedido.");
+                procesarCargaApuestas("");
+                return;
             }
-            // return true;
+            jugadoresRestantes--;
+        }
+        if (jugadoresRestantes > 0){
+            txtEntrada.setText("");
+            cambiarTurno();
+            procesarCargaApuestas("");
         }
     }
 
@@ -193,15 +261,15 @@ public class consolaGrafica implements IVista{
     }
 
     private void cicloPartida() {
-//        if (controlador.getIndiceJugadorActual() == controlador.getCantidadJugadoresTotal()){
-//            // chequear condicion
-//            turnoCrupier();
-//            return;
-//        }
+        if (controlador.getIndiceJugadorActual() == controlador.getCantidadJugadoresTotal()){
+            // chequear condicion
+            turnoCrupier();
+            return;
+        }
         while (controlador.getIndiceJugadorActual() != controlador.getCantidadJugadoresTotal() && !yaRepartio){
             controlador.repartirCartasIniciales(controlador.obtenerJugadorActual());
-            mostrarManoJugadorVista();
-            JOptionPane.showMessageDialog(frame, "Presione OK una vez visto las cartas.");
+            // mostrarManoJugadorVista();
+            // JOptionPane.showMessageDialog(frame, "Presione OK una vez visto las cartas.");
             // JOptionPane.showMessageDialog(frame, "DEBUG: cartas restantes --> " + controlador.cartasRestantes());
             controlador.cambiarTurnoJugador();
             finPartida = false;
@@ -215,7 +283,9 @@ public class consolaGrafica implements IVista{
         flagArrancoPartida = true;
         // mostrarMensaje("DEBUG -> IndiceJugador = " + controlador.getIndiceJugadorActual());
         mostrarMensaje("Es el turno de: " + controlador.getNombreJugador() + "\n");
-        // mostrarManoJugadorVista();
+        if (controlador.getCantidadJugadoresTotal() > 1 && controlador.getIndiceJugadorActual() >= 1){
+            // mostrarManoJugadorVista();
+        }
         mostrarMensaje("El saldo del jugador es de: " + controlador.getSaldoJugadorActual());
         if (!controlador.crupierTieneCarta()){
             controlador.crupierPideCarta();
@@ -224,11 +294,6 @@ public class consolaGrafica implements IVista{
         mostrarMensaje("Cartas restantes: " + controlador.cartasRestantes());
         mostrarMensaje("El crupier tiene: " + controlador.crupierMuestraPrimerCarta());
         vaDecisionJugador = true;
-//        if (controlador.getIndiceJugadorActual() == controlador.getCantidadJugadoresTotal()){
-//            turnoCrupier();
-//            finPartida = true;
-//            vaDecisionJugador = false;
-//        }
 
         flag = true; // Flag para intercambiar entre decision y check jugador
     }
@@ -259,7 +324,9 @@ public class consolaGrafica implements IVista{
             // mostrarManoJugadorVista();
             mostrarMensaje("Felicitaciones " + controlador.getNombreJugador() + " conseguiste BJ!");
             vaDecisionJugador = false;
-            if (controlador.getIndiceJugadorActual() == controlador.getCantidadJugadoresTotal()-1){
+            jugadorTuvoBlackjack = true;
+            cambiarTurno(); // ya con BJ no se puede seguir pidiendo ni plantarse.
+            if (controlador.getIndiceJugadorActual() == controlador.getCantidadJugadoresTotal()){
                 finPartida = true;
             }
         }else if (estadoJugador == 2){
@@ -275,12 +342,26 @@ public class consolaGrafica implements IVista{
         }else if (estadoJugador == 5){
             mostrarMenuOpcionesYaPidio();
             vaDecisionJugador = true;
-        }else if (estadoJugador == 0){
+        }else if (estadoJugador == 6){
+            if (!controlador.getJugadorDividio()){
+                cambiarTurno();
+                vaDecisionJugador = false;
+            }else{
+                if (!inicioMano2){
+                    // no inicio mano 2
+                    cargarManoDividida();
+                    // sigue con la siguiente mano
+                }else{
+                    cambiarTurno();
+                    // si esta la mano iniciada y se planta se cambia el turno
+                }
+            }
+        }
+        else if (estadoJugador == 0){
             mostrarMenuOpciones();
             vaDecisionJugador = true;
         }
         this.estadoJugador = -1; // Lo seteo en -1 para que vuelva a ser check
-
     }
 
     /**
@@ -294,7 +375,7 @@ public class consolaGrafica implements IVista{
                 jugadoresRestantes = cantidad;
                 mostrarMensaje("Cantidad de jugadores: " + jugadoresRestantes + "\n");
                 estadoCantidadJugadores = 0;
-                procesarNombresJugadores();
+                // procesarNombresJugadores();
             }else{
                 this.mostrarMensaje("[!] Debes ingresar una cantidad entre 1 y 7\n");
                 this.mostrarMensaje("Ingrese la cantidad de jugadores (1 - 7): ");
@@ -322,7 +403,7 @@ public class consolaGrafica implements IVista{
     }
 
     private void procesarNicknameJugador(String nickname, String saldo){
-        controlador.configurarJugadores(nickname, Integer.parseInt(saldo));
+        controlador.configurarJugadores(nickname, Float.parseFloat(saldo));
         mostrarMensaje("Jugador cargado con exito...");
         jugadoresRestantes--;
         cantJugadoresAgregados++;
@@ -359,6 +440,12 @@ public class consolaGrafica implements IVista{
     @Override
     public void mostrarMensaje(String mensaje) {
         txtSalida.append(mensaje + "\n");
+        txtSalida.update(txtSalida.getGraphics());
+        // txtEntrada.setText("");
+    }
+    public void mostrarMensaje2(String mensaje){
+        txtSalida.append(mensaje);
+        txtSalida.update(txtSalida.getGraphics());
     }
     /**
      *
@@ -414,21 +501,21 @@ public class consolaGrafica implements IVista{
         Carta cartaMano2;
 
         int cantidadCartas = Math.max(controlador.getCantidadCartasMano1(), controlador.getCantidadCartasMano2());
-        mostrarMensaje("-= MANO 1=-\t\t\t\t\t\t\t -= MANO 2 =-\n");
+        mostrarMensaje("-= MANO 1=-\t\t -= MANO 2 =-\n");
         for (int i = 0; i < cantidadCartas; i++){
             if (i < controlador.getCantidadCartasMano1()){
                 cartasMano1 = controlador.getCartasMano1(i);
-                mostrarMensaje(cartasMano1.getValor() + " de " + cartasMano1.getPalo());
+                mostrarMensaje2(cartasMano1.getValor() + " de " + cartasMano1.getPalo() + "       ");
                 sumatoriaPuntaje1 += cartasMano1.getValorNumerico();
                 if (cartasMano1.getValorNumerico() == 11) ases1++;
-            }else separadorMensaje15s("");;
+            }else mostrarMensaje2("\t");
             if (i < controlador.getCantidadCartasMano2()){
                 cartaMano2 = controlador.getCartasMano2(i);
-                separadorMensaje19s("");
-                mostrarMensaje(cartaMano2.getValor() + " de " + cartaMano2.getPalo() + "\n");
+                mostrarMensaje2("\t");
+                mostrarMensaje2(cartaMano2.getValor() + " de " + cartaMano2.getPalo() + "\n");
                 sumatoriaPuntaje2 += cartaMano2.getValorNumerico();
                 if (cartaMano2.getValorNumerico() == 11) ases2++;
-            }else separadorMensaje15s("");
+            }else mostrarMensaje2("\t");
         }
         while (sumatoriaPuntaje1 > 21 && ases1 > 0){
             aux1 = sumatoriaPuntaje1;
@@ -593,14 +680,23 @@ public class consolaGrafica implements IVista{
     private int checkEstadoMano(){
         Mano mano = controlador.obtenerManoJugador();
         if (mano != null) {
+            if (controlador.getJugadorSePlanto()){
+                return 6; // 6 = se planta el jugador
+            }
+            if (!controlador.getJugadorDividio()) mostrarManoJugadorVista();
             if (controlador.getJugadorTieneBlackjack()) {
-                mostrarManoJugadorVista();
+                // mostrarManoJugadorVista();
                 // mostrarMensaje("Felicitaciones " + controlador.getNombreJugador() + " conseguiste BJ!");
                 return 1; // 1 == Blackjack al Jugador
             }
             if (controlador.getCrupierTieneAsPrimera() && !controlador.getJugadorPidioCarta()){
                 if (controlador.getSaldoJugadorActual() >= controlador.getApuestaJugador()/2){
-                    int seguroBlackjack = JOptionPane.showConfirmDialog(frame, "ATENCIÓN! El crupier tiene un As de primera.", "¿Desea pagar el seguro?", JOptionPane.YES_NO_OPTION);
+                    int seguroBlackjack = JOptionPane.showConfirmDialog(
+                            frame, // JFrame
+                            "ATENCIÓN! El crupier tiene un As de primera.",
+                            "¿Desea pagar el seguro?",
+                            JOptionPane.YES_NO_OPTION
+                    );
                     if (seguroBlackjack == JOptionPane.YES_OPTION) {
                         controlador.setPagoSeguroJugador(controlador.obtenerJugadorActual(), true);
                         // mostrarMensaje("El jugador " + controlador.getNombreJugador() + " decidió pagar el seguro.");
@@ -611,52 +707,50 @@ public class consolaGrafica implements IVista{
                     }
                 }else mostrarMensaje("[!] No podés pagar el seguro debido que no tenés saldo suficiente (" + controlador.getSaldoJugadorActual() + ").");
             }
+            if (controlador.getSePaso21Index(0)){
+                return 4; // Jugador se pasa de 21.
+            }
             if (controlador.getJugadorPuedeDividir() && controlador.getSaldoJugadorActual() >= controlador.getApuestaJugador()){
                 // El jugador puede dividir por lo que retorno un '3'
                 return 3; // puede dividir
             }
-            if (controlador.getSePaso21Index(0)){
-                return 4; // Jugador se pasa de 21.
-            }
             if (controlador.getJugadorPidioCarta()) return 5; // Muestra Menu sin posibilidad de doblar ni dividir.
-
-            // Chequeo si todos los jugadores perdieron o no (para modificar finPartida)
-            int indiceAnterior = controlador.getIndiceJugadorActual();
-            controlador.setIndiceJugador(0);
-            while (controlador.getIndiceJugadorActual() != controlador.getCantidadJugadoresTotal()){
-                if (controlador.getPuntajeMano() < 21){
-                    return 0;
-                }else{
-                    finPartida = true;
-                    vaDecisionJugador = false;
-                }
-                controlador.cambiarTurnoJugador();
-            }
-            controlador.setIndiceJugador(indiceAnterior);
 
             return 0; // Continua el juego normalmente
         }
         flag = false;
         return -1; // Error en el chequeo
     }
-    private void procesarDecisionJugador(String decision){
+    private void procesarDecisionJugador(String decision, int i){
         if (decision.equals("c")){
             mostrarMensaje(controlador.getNombreJugador() + " pidió una carta.");
             controlador.setJugadorPidioCarta(true);
-            controlador.recibirCartaJugador();
-            mostrarManoJugadorVista();
-            if (!controlador.getSePaso21ManoPrincipal()){
+            // controlador.recibirCartaJugador();
+            controlador.setRepartirCartaAMano(i);
+            if (controlador.getManosJugador().size() == 1) mostrarManoJugadorVista();
+            else mostrarManosDivididasJugadorVista();
+            if (!controlador.getSePaso21Index(i)){
                 mostrarMenuOpcionesYaPidio();
                 vaDecisionJugador = true;
             }
         }else if (decision.equals("p")){
-            mostrarMensaje(controlador.getNombreJugador() + " se plantó.");
-            // controlador.cambiarTurnoJugador();
+            if (controlador.getManosJugador().size() == 2) mostrarMensaje(controlador.getNombreJugador() + " se plantó con " + controlador.getPuntajeManosIndices(i) + " en la mano " + (i+1) + ".");
+            else mostrarMensaje(controlador.getNombreJugador() + " se plantó con " + controlador.getPuntajeMano() + ".");
+            controlador.setJugadorSePlanto(true);
         }else if (decision.equals("s")){
-            if ((controlador.getSaldoJugadorActual() >= controlador.getApuestaJugador()) && controlador.compararDosCartasIguales()){
+            if ((controlador.getSaldoJugadorActual() >= controlador.getApuestaJugador()) && controlador.compararDosCartasIguales() && !controlador.getJugadorDividio()){
                 mostrarMensaje(controlador.getNombreJugador() + " dividió la mano.");
-                controlador.dividirManoJugador();
-                cargarManoDividida();
+                dividirMano();
+            }else if (controlador.getJugadorDividio()){
+                mostrarMensaje("[!] -> Ya dividiste. No podés dividir dos veces!");
+            }
+            else{
+                // mostrarMensaje("[!] No podés dividir dado que no tenés saldo suficiente!");
+                mostrarMensaje("[!] -> Saldo no disponible para dividir.");
+                estadoJugador = checkEstadoMano();
+                if (estadoJugador >= 0) mostrarEstadosJugador(estadoJugador);
+                flag = true;
+                return;
             }
         }else if (decision.equals("d")){
             if (controlador.getSaldoJugadorActual() >= controlador.getApuestaJugador() && !controlador.getJugadorPidioCarta()){
@@ -671,38 +765,86 @@ public class consolaGrafica implements IVista{
             }else mostrarMensaje("[!] No podés doblar dado que no tenés saldo suficiente!");
         }else mostrarMensaje("[!] Lo que se ingresó no es válido.");
         vaJugadorActual = true;
-        if (controlador.getPuntajeMano() == 21){
-            this.mostrarMensaje("Felicitaciones, conseguiste 21!");
-            vaDecisionJugador = false;
-        }else if (controlador.getSePaso21ManoPrincipal()){
-            this.mostrarMensaje("Te pasaste de 21. Perdiste.");
-            vaDecisionJugador = false;
-        }
-
-        if (controlador.getIndiceJugadorActual() == controlador.getCantidadJugadoresTotal()-1 && (controlador.getSePaso21ManoPrincipal() || decision.equals("p") || controlador.getPuntajeMano() == 21)){
+        if (!controlador.getJugadorSePlanto()){
+            if (controlador.getPuntajeMano() == 21){
+                this.mostrarMensaje("Felicitaciones, conseguiste 21!");
+                cambiarTurno();
+                vaDecisionJugador = false;
+            }else if (controlador.getSePaso21ManoPrincipal()){
+                this.mostrarMensaje("Te pasaste de 21. Perdiste.");
+                vaDecisionJugador = false;
+                cambiarTurno();
+            }else if (controlador.getJugadorDoblo()){
+                cambiarTurno();
+            }
+        }else cambiarTurno();
+        if (controlador.getIndiceJugadorActual() == controlador.getCantidadJugadoresTotal()){
             finPartida = true;
             vaDecisionJugador = false;
         }
+        // if (decision.equals("p") || decision.equals("d")) cambiarTurno();
+    }
+    private void dividirMano(){
+        mostrarMensaje("Dividiendo manos...");
+        controlador.dividirManoJugador();
+        controlador.setRepartirCartaAMano(0);
+        controlador.setRepartirCartaAMano(1);
+        controlador.setJugadorDividio(true);
+        mostrarManosDivididasJugadorVista();
     }
 
     private void cargarManoDividida() {
-        mostrarMensaje("Dividiendo manos...");
+        List<Mano> manos = controlador.getManosJugador();
+        boolean termino;
+        boolean terminoMano2 = false;
+        boolean imprimePrimeraVez = false;
+        if (!inicioMano2 && controlador.manoAUsar() == 1){
+            // seteo como false que pidio carta para continuar con la mano 2
+            controlador.setJugadorPidioCarta(false);
+            controlador.setJugadorSePlanto(false);
+            estadoJugador = checkEstadoManosDivididas(1);
+            inicioMano2 = true;
+            // doy inicio a la mano 2
+            mostrarEstadosJugador(estadoJugador);
+        }
+    }
+    private int checkEstadoManosDivididas(int indiceMano){
+        // mismo que checkEstadoMano() pero con lógica de manos divididas (2 manos para un jugador).
+        List<Mano> manos = controlador.getManosJugador();
+        if (manos != null){
+            if (controlador.getJugadorSePlanto()){
+                return 6; // jugador se plantó con la mano i
+            }
+            // mostrarManosDivididasJugadorVista();
+            if (controlador.getTieneBlackjackPorIndiceMano(indiceMano)){
+                return 1; // blackjack para la mano i
+            }
+            // No se consulta por seguro dado que para eso primero se consulta con una sola mano y luego se procede al juego
+            if (controlador.getSePaso21Index(indiceMano)) return 4;
+            if (controlador.getJugadorPidioCarta()) return 5;
+            return 0; // retorna 0 y sigue normalmente
+        }
+        return -1;
     }
 
     private void mostrarMenuOpciones(){
-        mostrarMensaje(controlador.getNombreJugador() + ": ingrese 'c' para pedir, 'd' para doblar o 'p' para plantarse: ");
+        if (controlador.getJugadorDividio()){
+            if (!inicioMano2){
+                mostrarMensaje("MANO " + (controlador.manoAUsar() + 1) + " --> " + controlador.getNombreJugador() + ": ingrese 'c' para pedir, 'd' para doblar o 'p' para plantarse: ");
+            }else mostrarMensaje("MANO " + (controlador.manoAUsar() + 2) + " --> " + controlador.getNombreJugador() + ": ingrese 'c' para pedir, 'd' para doblar o 'p' para plantarse: ");
+        }
+        else mostrarMensaje(controlador.getNombreJugador() + ": ingrese 'c' para pedir, 'd' para doblar o 'p' para plantarse: ");
     }
     private void mostrarMenuOpcionesYaPidio(){
-        mostrarMensaje(controlador.getNombreJugador() + ": ingrese 'c' para pedir o 'p' para plantarse: ");
+        if (controlador.getJugadorDividio()){
+            if (!inicioMano2){
+                mostrarMensaje("MANO " + (controlador.manoAUsar() + 1) + " --> " + controlador.getNombreJugador() + ": ingrese 'c' para pedir o 'p' para plantarse: ");
+            }else mostrarMensaje("MANO " + (controlador.manoAUsar() + 2) + " --> " + controlador.getNombreJugador() + ": ingrese 'c' para pedir o 'p' para plantarse: ");
+        }
+        else mostrarMensaje(controlador.getNombreJugador() + ": ingrese 'c' para pedir o 'p' para plantarse: ");
     }
     private void mostrarMenuOpcionesPuedeDividir(){
         mostrarMensaje(controlador.getNombreJugador() + ": ingrese 'c' para pedir, 'd' para doblar, 's' para dividir o 'p' para plantarse: ");
-    }
-
-
-    public void mostrarJugadorSaldoRestado() {
-        mostrarMensaje("DEBUG -> indiceJugador: " + controlador.getIndiceJugadorActual());
-        mostrarMensaje("Se le restó " + controlador.getApuestaJugador() + " del saldo disponible");
     }
 }
 

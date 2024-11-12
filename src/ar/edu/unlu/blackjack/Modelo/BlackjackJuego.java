@@ -14,6 +14,8 @@ public class BlackjackJuego implements Observable {
     private int cantidadJugadores;
     private int indiceJugador;
     private final ArrayList<controladorConsolaGrafica> misObservadores;
+    private String nickname;
+    private float saldo;
 
     public BlackjackJuego() {
         mazo = new Mazo();
@@ -37,6 +39,34 @@ public class BlackjackJuego implements Observable {
         for (int i = 0; i < misObservadores.size(); i++){
             misObservadores.get(i).update(this, evento);
         }
+    }
+
+    public boolean getJugadorDoblo(){
+        return getJugadorActualTurno().getDoblo();
+    }
+    public void setJugadorDoblo(boolean doblo, int indiceMano){
+        getJugadorActualTurno().setDoblo(doblo, indiceMano);
+    }
+    public boolean getJugadorDividio(){
+        return getJugadorActualTurno().getJugadorDividio();
+    }
+    public void setJugadorDividio(boolean dividio){
+        getJugadorActualTurno().setJugadorDividio(dividio);
+    }
+    public boolean getTieneBlackjackManoIndice(int index){
+        return getManosJugador().get(index).tieneBlackjack();
+    }
+    public void setNickname(String nickname) {
+        this.nickname = nickname;
+    }
+    public void setSaldo(float saldo) {
+        this.saldo = saldo;
+    }
+    public String getNickname() {
+        return nickname;
+    }
+    public float getSaldo() {
+        return saldo;
     }
     public Mazo getMazo(){
         return mazo;
@@ -99,16 +129,19 @@ public class BlackjackJuego implements Observable {
     public boolean getCrupierTieneAsPrimeraCarta(){
         return crupier.tieneAsPrimera();
     }
-    public int getSaldoJugador(){
+    public float getSaldoJugador(){
         return jugadores.get(indiceJugador).getSaldo();
     }
     public int ingresarSeguroBlackjack(){
         return jugadores.get(indiceJugador).getManoActual().seguroBlackjack(getJugadorActualTurno());
     }
-    public int getApuestaJugador(){
+    public float getApuestaJugador(){
         return jugadores.get(indiceJugador).getApuesta();
     }
-    public void setAjustarApuestaJugador(int monto){
+    public float getApuestaJugadorMano2(){
+        return jugadores.get(indiceJugador).getApuestaMano2();
+    }
+    public void setAjustarApuestaJugador(float monto){
         jugadores.get(indiceJugador).ajustarSaldo(monto);
     }
     public void setRecibirCarta(){
@@ -140,6 +173,7 @@ public class BlackjackJuego implements Observable {
     }
     public void setDividirMano(){
         getJugadorActualTurno().getManoActual().dividirMano(getJugadorActualTurno());
+        notificarObservadores(Evento.APUESTA_AMBAS_MANOS);
     }
     public void setRepartirCartaAMano(int indice){
         getJugadorActualTurno().repartirCartaAMano(indice, mazo.repartirCarta());
@@ -194,14 +228,14 @@ public class BlackjackJuego implements Observable {
     public List<Mano> getManosJugador(){
         return jugadores.get(indiceJugador).getManos();
     }
-    public void setAjustarSaldo(Jugador jugador, int monto){
+    public void setAjustarSaldo(Jugador jugador, float monto){
         jugador.ajustarSaldo(monto);
         jugador.setMonto(monto);
         if (monto > 0){
             notificarObservadores(Evento.SALDO_AGREGADO);
         }else notificarObservadores(Evento.SALDO_RESTADO);
     }
-    public void setApuesta(Jugador jugador, int monto){
+    public void setApuesta(Jugador jugador, float monto){
         jugador.setApuesta(monto);
         notificarObservadores(Evento.JUGADOR_APOSTO);
     }
@@ -211,10 +245,10 @@ public class BlackjackJuego implements Observable {
     public boolean getPagoSeguroJugador(){
         return getJugadorActualTurno().getPagoSeguro();
     }
-    public int getMontoApostado(){
+    public float getMontoApostado(){
         return getJugadorActualTurno().getMontoDeApuesta();
     }
-    public void setMontoApostado(int monto){
+    public void setMontoApostado(float monto){
         getJugadorActualTurno().setMonto(monto);
     }
     public void setJugadorPidioCarta(boolean b){
@@ -232,6 +266,12 @@ public class BlackjackJuego implements Observable {
     public void reiniciarBarajaMazo(){
         mazo.reiniciarBaraja();
     }
+    public boolean getJugadorSePlanto(){
+        return getJugadorActualTurno().getSePlanto();
+    }
+    public void setJugadorSePlanto(boolean sePlanto){
+        getJugadorActualTurno().setSePlanto(sePlanto);
+    }
 
     public boolean realizarApuesta(){
         if (this.indiceJugador == jugadores.size()) return true;
@@ -241,16 +281,17 @@ public class BlackjackJuego implements Observable {
         }
         setAjustarSaldo(getJugadorActualTurno(), -monto);
         setApuesta(getJugadorActualTurno(), monto);
+        // getJugadorActualTurno().mostrarSaldo();
         getJugadorActualTurno().iniciarMano();
         return true;
     }
     public boolean realizarApuestaConsolaGrafica(String monto){
         if (this.indiceJugador == jugadores.size()) return true;
-        if (Integer.parseInt(monto) > getSaldoJugador() || Integer.parseInt(monto) <= 1){
+        if (Float.parseFloat(monto) > getSaldoJugador() || Float.parseFloat(monto) <= 1){
             return false;
         }
-        setAjustarSaldo(getJugadorActualTurno(), -Integer.parseInt(monto));
-        setApuesta(getJugadorActualTurno(), Integer.parseInt(monto));
+        setAjustarSaldo(getJugadorActualTurno(), -Float.parseFloat(monto));
+        setApuesta(getJugadorActualTurno(), Float.parseFloat(monto));
         getJugadorActualTurno().iniciarMano();
         return true;
     }
@@ -262,7 +303,7 @@ public class BlackjackJuego implements Observable {
         return getJugadorActualTurno().getSeBajo();
     }
 
-    public void configurarJugadores(String nickname, int saldo){
+    public void configurarJugadores(String nickname, float saldo){
         jugadores.add(new Jugador(nickname, saldo));
     }
 
@@ -280,7 +321,7 @@ public class BlackjackJuego implements Observable {
     }
 
     public void evaluarGanadoresInterfazGrafica(){
-        if (crupier.tieneBlackjack()) evaluarGanadoresBlackjack();
+        if (crupier.tieneBlackjack()) evaluarGanadoresBlackjackInterfazGrafica();
         else evaluarGanadoresNOBlackjackInterfazGrafica();
     }
 
@@ -305,8 +346,47 @@ public class BlackjackJuego implements Observable {
             }
         }
     }
+    public void evaluarGanadoresBlackjackInterfazGrafica(){
+        notificarObservadores(Evento.CRUPIER_BLACKJACK);
+        setIndiceJugador(0);
+        while (getIndice() != getCantidadJugadores()){
+            List<Mano> manos = getManosJugador();
+            if (crupier.multiplesManos()){
+                // mano 1
+                notificarObservadores(Evento.PUNTUACION_MANO1);
+                if (getTieneBlackjackManoIndice(0)){
+                    notificarObservadores(Evento.CRUPIER_BLACKJACK_Y_EMPATE);
+                    devolverApuesta(getJugadorActualTurno(), getJugadorActualTurno().getApuesta());
+                }else if (getPagoSeguroJugador()){
+                    notificarObservadores(Evento.DEVUELTO_POR_SEGURO);
+                    devolverApuesta(getJugadorActualTurno(), getJugadorActualTurno().getApuesta());
+                }else{
+                    notificarObservadores(Evento.PERDIO_JUGADOR);
+                }
+                // mano 2
+                notificarObservadores(Evento.PUNTUACION_MANO2);
+                if (getTieneBlackjackManoIndice(1)){
+                    notificarObservadores(Evento.CRUPIER_BLACKJACK_Y_EMPATE);
+                    devolverApuesta(getJugadorActualTurno(), getJugadorActualTurno().getApuestaMano2());
+                }else{
+                    notificarObservadores(Evento.PERDIO_JUGADOR);
+                }
+            }else{
+                if (getJugadorTieneBlackjack()){
+                    notificarObservadores(Evento.CRUPIER_BLACKJACK_Y_EMPATE);
+                    devolverApuesta(getJugadorActualTurno(), getJugadorActualTurno().getApuesta());
+                }else if (getPagoSeguroJugador()){
+                    notificarObservadores(Evento.DEVUELTO_POR_SEGURO);
+                    devolverApuesta(getJugadorActualTurno(), getJugadorActualTurno().getApuesta());
+                }else{
+                    notificarObservadores(Evento.PERDIO_JUGADOR);
+                }
+            }
+            cambiarTurno();
+        }
+    }
 
-    public void devolverApuesta(Jugador jugador, int apuesta) {
+    public void devolverApuesta(Jugador jugador, float apuesta) {
         // System.out.printf("%s: debido al empate se te devolvió el monto apostado (%d)\n", jugador.getNombre(), apuesta);
 //        if (crupier.tieneBlackjack()) notificarObservadores(Evento.CRUPIER_BLACKJACK);
 //        else notificarObservadores(Evento.EMPATO_JUGADOR);
@@ -317,10 +397,16 @@ public class BlackjackJuego implements Observable {
         notificarObservadores(Evento.SALDO_AGREGADO_EMPATE);
     }
 
-    public void adjudicarGanancia(Jugador jugador, int apuesta){
+    public void adjudicarGanancia(Jugador jugador, float apuesta){
         // System.out.printf("%s: felicitaciones! Ganaste la apuesta.\n", jugador.getNombre());
-        notificarObservadores(Evento.ADJUDICAR_GANANCIA);
-        jugador.ajustarSaldo(2*apuesta);
+        if (jugador.tieneBlackjack()){
+            notificarObservadores(Evento.ADJUDICAR_GANANCIA_BJ);
+            jugador.ajustarSaldo((float)2.5*apuesta);
+        }else{
+            notificarObservadores(Evento.ADJUDICAR_GANANCIA);
+            jugador.ajustarSaldo(2*apuesta);
+        }
+
     }
 
     public void evaluarGanadoresNOBlackjack(){ // Entra si el crupier NO tiene Blackjack
@@ -404,6 +490,40 @@ public class BlackjackJuego implements Observable {
         while (getIndice() != getCantidadJugadores()){
             if (getJugadorActualTurno().multiplesManos()){
                 // Logica para jugador con 2 manos
+                // mano 1
+                notificarObservadores(Evento.PUNTUACION_MANO1);
+                if (getSePaso21Index(0)){
+                    notificarObservadores(Evento.PERDIO_JUGADOR);
+                }else if (crupierSePaso21()){
+                    notificarObservadores(Evento.GANADOR_JUGADOR);
+                    adjudicarGanancia(getJugadorActualTurno(), getJugadorActualTurno().getApuesta());
+                }else if (getPuntajeMano1() > puntajeCrupier){
+                    notificarObservadores(Evento.GANADOR_JUGADOR);
+                    adjudicarGanancia(getJugadorActualTurno(), getJugadorActualTurno().getApuesta());
+                }else if (getPuntajeMano1() < puntajeCrupier){
+                    notificarObservadores(Evento.PERDIO_JUGADOR);
+                }else{
+                    notificarObservadores(Evento.EMPATO_JUGADOR);
+                    devolverApuesta(getJugadorActualTurno(), getJugadorActualTurno().getApuesta());
+                }
+                // mano 2
+                notificarObservadores(Evento.PUNTUACION_MANO2);
+                if (getSePaso21Index(1)){
+                    notificarObservadores(Evento.PERDIO_JUGADOR);
+                }else if (crupierSePaso21()){
+                    notificarObservadores(Evento.GANADOR_JUGADOR);
+                    adjudicarGanancia(getJugadorActualTurno(), getJugadorActualTurno().getApuesta());
+                }else if (getPuntajeMano2() > puntajeCrupier){
+                    notificarObservadores(Evento.GANADOR_JUGADOR);
+                    adjudicarGanancia(getJugadorActualTurno(), getJugadorActualTurno().getApuesta());
+                }else if (getPuntajeMano2() < puntajeCrupier){
+                    notificarObservadores(Evento.PERDIO_JUGADOR);
+                }else{
+                    notificarObservadores(Evento.EMPATO_JUGADOR);
+                    devolverApuesta(getJugadorActualTurno(), getJugadorActualTurno().getApuesta());
+                }
+
+                cambiarTurno();
             }else{
                 notificarObservadores(Evento.ESPACIADOR_EN_CHAT);
                 int puntajeMano1 = getPuntajeMano1();

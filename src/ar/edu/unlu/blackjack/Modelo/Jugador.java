@@ -9,17 +9,19 @@ public class Jugador {
     private List<Mano> manos;
     private int puntaje;
     private Saldo saldo;
-    private int apuesta;
-    private int apuestaMano2;
+    private float apuesta;
+    private float apuestaMano2;
     private boolean doblo;
     private boolean pagoSeguro;
     private Scanner scanner;
     private boolean esTurno;
     private boolean seBajo;
-    private int montoDeApuesta;
+    private float montoDeApuesta;
     private boolean pidioCarta;
+    private boolean sePlanto;
+    private boolean jugadorDividio;
 
-    public Jugador(String nombre, int saldoInicial) {
+    public Jugador(String nombre, float saldoInicial) {
         this.nombre = nombre;
         this.manos = new ArrayList<>();
         this.montoDeApuesta = 0;
@@ -32,12 +34,36 @@ public class Jugador {
         this.pagoSeguro = false;
         this.esTurno = false;
         this.seBajo = false;
+        this.jugadorDividio = false;
         this.scanner = new Scanner(System.in);
     }
-    public int getSaldo(){
+    public boolean getDoblo(){
+        if (multiplesManos()){
+            if (getManoActual().getDoblo()){
+                return true;
+            }
+            return getMano2().getDoblo();
+        }else return getManoActual().getDoblo();
+    }
+    public void setDoblo(boolean doblo, int indice){
+        manos.get(indice).setDoblo(doblo);
+    }
+    public boolean getSePlanto(){
+        return this.sePlanto;
+    }
+    public void setSePlanto(boolean sePlanto){
+        this.sePlanto = sePlanto;
+    }
+    public void setJugadorDividio(boolean jugadorDividio){
+        this.jugadorDividio = jugadorDividio;
+    }
+    public boolean getJugadorDividio(){
+        return this.jugadorDividio;
+    }
+    public float getSaldo(){
         return saldo.getSaldo();
     }
-    public void ajustarSaldo(int monto){
+    public void ajustarSaldo(float monto){
         if (monto > 0){
             saldo.agregarSaldo(monto);
             System.out.println("Saldo agregado: " + monto);
@@ -76,28 +102,28 @@ public class Jugador {
         }
     }
 
-    public int mostrarSaldo(){
+    public float mostrarSaldo(){
         return getSaldo();
     }
     public String getNombre() {
         return this.nombre;
     }
-    public int getApuesta(){
+    public float getApuesta(){
         return this.apuesta;
     }
-    public int getApuestaMano2(){
+    public float getApuestaMano2(){
         return this.apuestaMano2;
     }
-    public void setApuestaMano2(int monto){
+    public void setApuestaMano2(float monto){
         this.apuestaMano2 = monto;
     }
-    public void setApuesta(int monto){
+    public void setApuesta(float monto){
         this.apuesta = monto;
     }
-    public void setMonto(int monto){
+    public void setMonto(float monto){
         this.montoDeApuesta = monto;
     }
-    public int getMontoDeApuesta(){
+    public float getMontoDeApuesta(){
         return this.montoDeApuesta;
     }
     public boolean getPagoSeguro(){

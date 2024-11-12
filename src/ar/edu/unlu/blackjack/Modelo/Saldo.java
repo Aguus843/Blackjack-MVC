@@ -1,14 +1,14 @@
 package ar.edu.unlu.blackjack.Modelo;
 
 public class Saldo {
-    private int cantidad;
+    private float cantidad;
 
-    public Saldo(int cantidadInicial) {
+    public Saldo(float cantidadInicial) {
         this.cantidad = cantidadInicial;
     }
 
     // Getter para obtener el saldo
-    public int getSaldo(){
+    public float getSaldo(){
         return this.cantidad;
     }
 
@@ -16,13 +16,13 @@ public class Saldo {
         System.out.println("Saldo disponible: " + this.cantidad);
     }
 
-    public void agregarSaldo(int monto){
+    public void agregarSaldo(float monto){
         if (monto > 0){
             this.cantidad += monto; // Valido que el monto pasado por parámetro sea mayor que cero
         }
     }
 
-    public boolean retirarSaldo(int monto){ // Lo hago boolean para que el jugador pueda apostar con este saldo
+    public boolean retirarSaldo(float monto){ // Lo hago boolean para que el jugador pueda apostar con este saldo
         if (monto > 0 && this.cantidad > 0){
             this.cantidad -= monto;
             // System.out.println("Se le retiró " + monto + (this.cantidad == 0 ? "" : " de " + this.cantidad + monto));

@@ -36,6 +36,9 @@ public class Mano{
     public boolean getDoblo(){
         return this.doblo;
     }
+    public void setDoblo(boolean b){
+        this.doblo = b;
+    }
     public boolean getPagoSeguro(){
         return this.pagoSeguro;
     }

@@ -345,7 +345,7 @@ public class VistaConsola {
                                     imprimioPrimeraVez = true;
                                     mostrarMensajeConSaltoLinea("Es el turno de: " + controlador.getNombreJugador() + " con la mano " + (i+1) + " ---> (" + controlador.getPuntajeManosIndices(i) + ")");
                                     mostrarMensaje(controlador.getNombreJugador() + ": ingrese 'c' para pedir, 'd' para doblar o 'p' para plantarse: ");
-                                    // inputDecision = controladorConsolaGrafica.ingresarPorTeclado().toLowerCase();
+                                    inputDecision = controlador.ingresarPorTeclado().toLowerCase();
                                     if (inputDecision.equals("c")){
                                         controlador.setRepartirCartaAMano(i);
                                         mostrarManosDivididasJugadorVista();
@@ -388,6 +388,13 @@ public class VistaConsola {
                     }else{
                         mostrarMensajeConSaltoLinea("[!] No podés dividir dado que no tenés dos cartas iguales!");
                     }
+                    try {
+                        mostrarMensaje("Consola en pausa (2 segundos)...\n");
+                        Thread.sleep(2000);
+                    }catch (InterruptedException e){
+                        e.printStackTrace();
+                    }
+                    break;
                 }
                 else if (inputDecision.equals("d")){
                     if (controlador.getSaldoJugadorActual() >= controlador.getApuestaJugador() && !yaPidio){

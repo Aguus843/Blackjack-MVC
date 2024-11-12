@@ -1,19 +1,17 @@
 package ar.edu.unlu.blackjack.Controlador;
 import ar.edu.unlu.blackjack.Modelo.*;
-import ar.edu.unlu.blackjack.Vista.ConsolaGrafica.consolaGrafica;
-import ar.edu.unlu.blackjack.Vista.VistaConsola;
 
 import java.util.List;
 
 public class controladorConsolaGrafica implements Observador{
     private BlackjackJuego modelo;
-    private consolaGrafica vista;
+    private ar.edu.unlu.blackjack.Vista.ConsolaGrafica.consolaGrafica vista;
 
-    public controladorConsolaGrafica(consolaGrafica vista){
+    public controladorConsolaGrafica(ar.edu.unlu.blackjack.Vista.ConsolaGrafica.consolaGrafica vista){
         this.vista = vista;
     }
 
-    public void configurarJugadores(String nickname, int saldo){
+    public void configurarJugadores(String nickname, float saldo){
         modelo.configurarJugadores(nickname, saldo);
     }
 
@@ -99,7 +97,7 @@ public class controladorConsolaGrafica implements Observador{
         return modelo.getCrupierTieneAsPrimeraCarta();
     }
 
-    public int getSaldoJugadorActual(){
+    public float getSaldoJugadorActual(){
         return modelo.getSaldoJugador();
     }
 
@@ -107,11 +105,15 @@ public class controladorConsolaGrafica implements Observador{
         return modelo.ingresarSeguroBlackjack();
     }
 
-    public int getApuestaJugador(){
+    public float getApuestaJugador(){
         return modelo.getApuestaJugador();
     }
 
-    public void ajustarSaldoJugador(int monto){
+    public float getApuestaJugadorMano2(){
+        return modelo.getApuestaJugadorMano2();
+    }
+
+    public void ajustarSaldoJugador(float monto){
         modelo.setAjustarApuestaJugador(monto);
     }
 
@@ -239,11 +241,11 @@ public class controladorConsolaGrafica implements Observador{
         modelo.setPagoSeguroJugador(jugador, b);
     }
 
-    public int getMontoApostado(){
+    public float getMontoApostado(){
         return modelo.getMontoApostado();
     }
 
-    public void setMontoApostado(int monto){
+    public void setMontoApostado(float monto){
         modelo.setMontoApostado(monto);
     }
 
@@ -270,6 +272,57 @@ public class controladorConsolaGrafica implements Observador{
     public void resetBaraja(){
         modelo.reiniciarBarajaMazo();
     }
+
+    public void setNickname(String nickname){
+        modelo.setNickname(nickname);
+    }
+
+    public void setSaldo(float saldo){
+        modelo.setSaldo(saldo);
+    }
+
+    public String getNickname(){
+        return modelo.getNickname();
+    }
+
+    public float getSaldo(){
+        return modelo.getSaldo();
+    }
+
+    public boolean getJugadorSePlanto(){
+        return modelo.getJugadorSePlanto();
+    }
+
+    public void setJugadorSePlanto(boolean b){
+        modelo.setJugadorSePlanto(b);
+    }
+
+    public boolean getTieneBlackjackPorIndiceMano(int indice){
+        return modelo.getTieneBlackjackManoIndice(indice);
+    }
+
+    public void setJugadorDividio(boolean b){
+        modelo.setJugadorDividio(b);
+    }
+
+    public boolean getJugadorDividio(){
+        return modelo.getJugadorDividio();
+    }
+
+    public int manoAUsar(){
+        if (!getJugadorDividio()) return 0;
+        else if (getJugadorDividio() && (getJugadorSePlanto() || getSePaso21ManoPrincipal())) return 1; // si divide y se planta o se pasa, se utiliza la mano 2
+        else return 0; // si divide y no se planta se usa la mano 1
+    }
+
+    public boolean getJugadorDoblo(){
+        return modelo.getJugadorDoblo();
+    }
+
+    public void setJugadorDoblo(boolean b, int indiceMano){
+        modelo.setJugadorDoblo(b, indiceMano);
+    }
+
 
     @Override
     public void update(Observable o, Object arg){
@@ -328,6 +381,19 @@ public class controladorConsolaGrafica implements Observador{
                     break;
                 case ADJUDICAR_GANANCIA:
                     this.vista.mostrarMensaje("Felicitaciones! Ganaste la apuesta --> ($" + this.getApuestaJugador()*2 + ").");
+                    break;
+                case ADJUDICAR_GANANCIA_BJ:
+                    this.vista.mostrarMensaje("Felicitaciones! Ganaste la apuesta con un BJ --> ($" + this.getApuestaJugador()*2.5 + ").");
+                case APUESTA_AMBAS_MANOS:
+                    this.vista.mostrarMensaje(this.getNombreJugador() + ": tu apuesta para ambas manos son -> Mano 1 (" + this.getApuestaJugador() + ") -> Mano 2 (" + this.getApuestaJugadorMano2() + ").");
+                    break;
+                case PUNTUACION_MANO1:
+                    this.vista.mostrarMensaje("========================= MANO 1 =========================\n");
+                    this.vista.mostrarMensaje("Puntuación final de la mano 1 de " + this.getNombreJugador() + " es --> " + this.getPuntajeMano1());
+                    break;
+                case PUNTUACION_MANO2:
+                    this.vista.mostrarMensaje("\n========================= MANO 2 =========================\n");
+                    this.vista.mostrarMensaje("Puntuación final de la mano 2 de " + this.getNombreJugador() + " es --> " + this.getPuntajeMano2());
                     break;
                 default:
                     break;
